@@ -1,0 +1,14 @@
+[package]
+name = "marco"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.98"
+async-openai = "0.28.1"
+async-trait = "0.1.88"
+rand = "0.9.1"
+serenity = "0.12.4"
+strum = { version = "0.27.1", features = ["derive"] }
+strum_macros = "0.27.1"
+tokio = { version = "1.44.2", features = ["rt-multi-thread"] }
