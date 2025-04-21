@@ -8,6 +8,8 @@ pub use quirk::Quirk;
 pub use trigger::run_personality_shift;
 
 use rand::{rng, Rng};
+use rand::seq::IndexedRandom;
+use strum::VariantArray;
 
 use std::fmt::{self, Display};
 
@@ -32,6 +34,13 @@ impl Personality {
       adjective,
       quirk,
     }
+  }
+
+  pub fn generate_random() -> Self {
+    let mut random = rng();
+    let mut options: Vec<_> = BasePersonality::VARIANTS.into_iter().copied().collect();
+    options.remove(0); // Never generate the [`BasePersonality::Basic`] personality.
+    Personality::generate(*options.choose(&mut random).unwrap())
   }
 
   pub fn marco_name(&self) -> &'static str {

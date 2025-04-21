@@ -6,8 +6,6 @@ use super::{Personality, BasePersonality};
 use super::base::RANDOM_TRIGGER_WORDS;
 
 use regex::{RegexSet, RegexSetBuilder, escape};
-use rand::rng;
-use rand::seq::IndexedRandom;
 use strum::VariantArray;
 
 use std::sync::LazyLock;
@@ -70,10 +68,7 @@ impl PersonalityShifter for ShiftToRandom {
   }
 
   fn trigger_shift(&self, personality: &mut Personality) {
-    let mut random = rng();
-    let mut options: Vec<_> = BasePersonality::VARIANTS.into_iter().copied().collect();
-    options.remove(0); // Never generate the [`BasePersonality::Basic`] personality.
-    *personality = Personality::generate(*options.choose(&mut random).unwrap());
+    *personality = Personality::generate_random();
   }
 }
 
