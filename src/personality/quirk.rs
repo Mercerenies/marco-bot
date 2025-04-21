@@ -16,6 +16,8 @@ pub enum Quirk {
   Royalty,
   IAmNot,
   Hustler,
+  Haiku,
+  TuringTest,
 }
 
 impl Quirk {
@@ -31,6 +33,8 @@ impl Quirk {
       Quirk::Royalty => "who believes they are secretly royalty",
       Quirk::IAmNot => "who doesn't believe they really exist",
       Quirk::Hustler => "who is running a get-rich-quick hustle",
+      Quirk::Haiku => "who can only speak in haiku",
+      Quirk::TuringTest => "who is convinced that everyone else in the chat is an AI",
     }
   }
 }

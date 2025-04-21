@@ -4,7 +4,7 @@ pub mod nicknames;
 
 use message::MessageHistory;
 use nicknames::NicknameMap;
-use crate::personality::Personality;
+use crate::personality::{Personality, run_personality_shift};
 
 use serenity::prelude::*;
 use serenity::model::channel::Message;
@@ -53,6 +53,10 @@ impl MarcoBotState {
       personality: Personality::default(),
     }
   }
+
+  pub fn calculate_personality(&mut self, content: &str) {
+    run_personality_shift(content, &mut self.personality);
+  }
 }
 
 impl Default for MarcoBotState {
@@ -64,7 +68,18 @@ impl Default for MarcoBotState {
 #[async_trait]
 impl EventHandler for MarcoBot {
   async fn message(&self, ctx: Context, msg: Message) {
-    println!("Got a message!");
+    let bot_user_id = ctx.cache.current_user().id;
+    if msg.author.id == bot_user_id {
+      // Ignore all messages from the bot.
+      return;
+    }
+
+    {
+      let mut state = self.lock_state();
+      state.calculate_personality(&msg.content);
+    }
+
+    // TODO Respond
   }
 
   async fn ready(&self, _: Context, ready: Ready) {

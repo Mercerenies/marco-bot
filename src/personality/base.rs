@@ -6,7 +6,11 @@ use rand::Rng;
 use rand::distr::{Distribution, StandardUniform};
 use rand::seq::IndexedRandom;
 
-#[derive(Debug, Default, Clone, Copy, VariantArray)]
+pub const RANDOM_TRIGGER_WORDS: &[&str] = &[
+  "random", "randoms", "chaos", "chaotic", "unpredictable", "unknown",
+];
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, VariantArray)]
 pub enum BasePersonality {
   #[default]
   Basic,
@@ -79,6 +83,57 @@ impl BasePersonality {
       BasePersonality::ToothFairy => "Tooth Fairy Marco",
       BasePersonality::FrenchPoet => "Poet Marco",
       BasePersonality::SororityGirl => "Sorority Girl Marco",
+    }
+  }
+
+  pub fn trigger_words(self) -> &'static [&'static str] {
+    match self {
+      BasePersonality::Basic => &[],
+      BasePersonality::Cowboy => &["cowboy", "cowgirl", "cow", "west", "western", "rifle", "gold",
+                                   "cowboys", "cowgirls", "cows", "rifles", "person", "persons",
+                                   "people", "old", "yeller"],
+      BasePersonality::MadScientist => &["science", "scientist", "villain", "supervillain", "chemist",
+                                         "chemistry", "biologist", "biology", "physics",
+                                         "villains", "supervillains", "scientists", "biologists",
+                                         "chemists", "ethic", "ethics", "ethical", "discussion",
+                                         "discussions"],
+      BasePersonality::PirateCaptain => &["captain", "pirate", "ship", "boat", "sailor", "crew",
+                                          "captains", "pirates", "piracy", "ships", "boats", "sailors",
+                                          "crews"],
+      BasePersonality::Snake => &["snake", "serpent", "bible", "jesus", "christ", "god", "devil",
+                                  "snakes", "pits", "serpents", "indiana", "jones", "gods", "devils",
+                                  "demon", "demons", "sorry", "apologize", "apologized", "apologizes"],
+      BasePersonality::Dog => &["dog", "cat", "dogs", "cats", "pet", "pets", "animal", "animals",
+                                "woof", "arf", "bark", "meow", "furry"],
+      BasePersonality::Witch => &["witch", "evil", "witches", "warlock", "warlocks",
+                                  "spell", "spells", "hallow", "hallows", "hallow's", "halloween",
+                                  "net", "nets"],
+      BasePersonality::Tourist => &["tourism", "tourist", "tourists", "book", "tour", "guide",
+                                    "books", "guides", "travel", "travels", "traveler", "travelers",
+                                    "vacation", "distance", "chat", "chatty", "chatting", "chats"],
+      BasePersonality::MovieNarrator => &["narrator", "movie", "movies", "narrators", "tv", "television",
+                                          "televisions", "show", "watch", "watches", "watched", "watching"],
+      BasePersonality::AncientWizard => &["wizard", "wizards", "ancient", "forever", "time", "times", "past",
+                                          "future", "friend", "friends"],
+      BasePersonality::ConspiracyTheorist => &["conspiracy", "theory", "theorist", "theorists", "crazy",
+                                               "mad", "nut", "nuts", "nutball", "nutballs", "usa", "trump",
+                                               "donald", "republican", "democrat", "democratic", "republic",
+                                               "libertarian", "country", "countries", "nation", "nations",
+                                               "national", "nationalism", "patriot", "patriotism", "government",
+                                               "governments"],
+      BasePersonality::SantaClaus => &["santa", "claus", "clause", "christmas", "xmas", "good", "goodwill",
+                                       "will", "present", "presents", "holiday", "holidays", "eve",
+                                       "boxing", "day"],
+      BasePersonality::ToothFairy => &["tooth", "teeth", "fairy", "fairies", "paste", "toothpaste", "brush",
+                                       "toothbrush", "toothbrushes", "dentist", "dentists", "dental",
+                                       "orthodontist", "mint", "minty", "cavity", "fill", "filling",
+                                       "floss", "wing", "winged", "wings", "raspberry", "raspi", "pi"],
+      BasePersonality::FrenchPoet => &["poet", "poetry", "poem", "poets", "poems", "shakespeare",
+                                       "proverb", "proverbial", "proverbs", "metaphor", "simile",
+                                       "metaphors", "similes"],
+      BasePersonality::SororityGirl => &["sorority", "fraternity", "sororities", "fraternities", "girl",
+                                         "girls", "gal", "gals", "college", "greek", "greece", "colleges",
+                                         "school", "schools", "class", "classes"],
     }
   }
 }

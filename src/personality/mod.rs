@@ -1,9 +1,11 @@
 
-mod base;
+pub mod base;
 mod quirk;
+mod trigger;
 
 pub use base::{BasePersonality, Adjective};
 pub use quirk::Quirk;
+pub use trigger::run_personality_shift;
 
 use rand::{rng, Rng};
 
