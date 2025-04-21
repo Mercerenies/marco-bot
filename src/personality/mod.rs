@@ -23,7 +23,7 @@ pub struct Personality {
 impl Personality {
   pub fn generate(base_personality: BasePersonality) -> Self {
     let mut random = rng();
-    let adjective = if random.random::<f32>() < 0.2 {
+    let adjective = if random.random::<f32>() < 0.1 {
       Some(random.random())
     } else {
       None

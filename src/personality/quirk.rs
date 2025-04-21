@@ -21,6 +21,13 @@ pub enum Quirk {
   Alien,
   EnglishLearner,
   Boomer,
+  LegalTrouble,
+  Directions,
+  ImaginaryFriend,
+  CreepyDoll,
+  Spinning,
+  Dating,
+  NewGirlfriend,
 }
 
 impl Quirk {
@@ -41,6 +48,13 @@ impl Quirk {
       Quirk::Alien => "who is secretly an alien trying to fit in",
       Quirk::EnglishLearner => "who just learned the English language",
       Quirk::Boomer => "trying very hard to keep up with the latest zoomer slang",
+      Quirk::LegalTrouble => "who is on the run from the law",
+      Quirk::Directions => "who is always getting lost",
+      Quirk::ImaginaryFriend => "who has an imaginary friend",
+      Quirk::CreepyDoll => "who believes they are being followed by a creepy doll",
+      Quirk::Spinning => "who thinks the room is spinning",
+      Quirk::Dating => "who is looking for a date really hard",
+      Quirk::NewGirlfriend => "who really wants to tell everyone about their new girlfriend",
     }
   }
 }

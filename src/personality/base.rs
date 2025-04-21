@@ -30,6 +30,10 @@ pub enum BasePersonality {
   SororityGirl,
   MafiaGoon,
   OldLibrarian,
+  RadioHost,
+  Goblin,
+  Superhero,
+  Butler,
 }
 
 #[derive(Debug, Clone, Copy, Display, VariantArray)]
@@ -40,6 +44,14 @@ pub enum Adjective {
   OverlyApologetic,
   #[strum(serialize = "Extremely-dramatic")]
   Dramatic,
+  #[strum(serialize = "Sleepy")]
+  Sleepy,
+  #[strum(serialize = "Soft-spoken")]
+  SoftSpoken,
+  #[strum(serialize = "Optimistic")]
+  Optimistic,
+  #[strum(serialize = "Tea-obsessed")]
+  TeaObsessed,
 }
 
 impl BasePersonality {
@@ -53,15 +65,19 @@ impl BasePersonality {
       BasePersonality::Dog => "Talking Dog",
       BasePersonality::Witch => "Evil Witch",
       BasePersonality::Tourist => "Annoying Tourist",
-      BasePersonality::MovieNarrator => "Movie Narrator",
+      BasePersonality::MovieNarrator => "Twilight Zone Narrator",
       BasePersonality::AncientWizard => "Ancient Wizard",
-      BasePersonality::ConspiracyTheorist => "Conspiracy Theorist",
+      BasePersonality::ConspiracyTheorist => "Crazy Conspiracy Theorist",
       BasePersonality::SantaClaus => "Santa Claus",
       BasePersonality::ToothFairy => "Tooth Fairy",
       BasePersonality::FrenchPoet => "French Poet",
-      BasePersonality::SororityGirl => "Sorority Girl",
-      BasePersonality::MafiaGoon => "Mafia Goon",
-      BasePersonality::OldLibrarian => "Old Librarian",
+      BasePersonality::SororityGirl => "Excitable Sorority Girl",
+      BasePersonality::MafiaGoon => "Sleazy Mafia Goon",
+      BasePersonality::OldLibrarian => "Old Maid Librarian",
+      BasePersonality::RadioHost => "Over-the-top Radio Host",
+      BasePersonality::Goblin => "Greedy Goblin",
+      BasePersonality::Superhero => "All-American Superhero",
+      BasePersonality::Butler => "Traditional British Butler",
     };
     if let Some(adjective) = adjective {
       format!("{} {}", adjective, noun)
@@ -89,6 +105,10 @@ impl BasePersonality {
       BasePersonality::SororityGirl => "Sorority Girl Marco",
       BasePersonality::MafiaGoon => "Goon Marco",
       BasePersonality::OldLibrarian => "Librarian Marco",
+      BasePersonality::RadioHost => "Radio Host Marco",
+      BasePersonality::Goblin => "Goblin Marco",
+      BasePersonality::Superhero => "Superhero Marco",
+      BasePersonality::Butler => "Butler Marco",
     }
   }
 
@@ -147,6 +167,17 @@ impl BasePersonality {
       BasePersonality::OldLibrarian => &["librarian", "librarians", "library", "libraries",
                                          "book", "books", "text", "textbook", "textbooks", "word",
                                          "words", "old", "elderly", "maid"],
+      BasePersonality::RadioHost => &["host", "hosts", "radio", "radios", "broadcast", "broadcasts",
+                                      "advertise", "advertisement", "advertises", "google", "internet",
+                                      "internets"],
+      BasePersonality::Goblin => &["goblin", "goblins", "cave", "caves", "dark", "darkness", "cavern",
+                                   "secret", "secrets", "orc", "orcs", "ogre", "ogres"],
+      BasePersonality::Superhero => &["hero", "heroes", "super", "superhero", "superheroes", "supers",
+                                      "incredible", "incredibles", "syndrome", "power", "powers",
+                                      "superpower", "superpowers"],
+      BasePersonality::Butler => &["butler", "butlers", "buddy", "buddies", "housework", "house",
+                                   "home", "houses", "chore", "chores", "dish", "dishes", "bake",
+                                   "kitchen", "dinner"],
     }
   }
 }

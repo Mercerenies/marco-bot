@@ -25,7 +25,7 @@ pub const DEVELOPER_PROMPT: &str = "\
 /// each message, so we strip it.
 pub const NAMED_PREFIX_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(.{1,32}):\s+").unwrap());
 
-pub const QUOTES_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"^"|"$"#).unwrap());
+pub const QUOTES_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"^["“]|["”]$"#).unwrap());
 
 pub fn chat_completion<'a, I>(
   personality: &Personality,
