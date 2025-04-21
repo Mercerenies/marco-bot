@@ -28,6 +28,8 @@ pub enum BasePersonality {
   ToothFairy,
   FrenchPoet,
   SororityGirl,
+  MafiaGoon,
+  OldLibrarian,
 }
 
 #[derive(Debug, Clone, Copy, Display, VariantArray)]
@@ -58,6 +60,8 @@ impl BasePersonality {
       BasePersonality::ToothFairy => "Tooth Fairy",
       BasePersonality::FrenchPoet => "French Poet",
       BasePersonality::SororityGirl => "Sorority Girl",
+      BasePersonality::MafiaGoon => "Mafia Goon",
+      BasePersonality::OldLibrarian => "Old Librarian",
     };
     if let Some(adjective) = adjective {
       format!("{} {}", adjective, noun)
@@ -83,6 +87,8 @@ impl BasePersonality {
       BasePersonality::ToothFairy => "Tooth Fairy Marco",
       BasePersonality::FrenchPoet => "Poet Marco",
       BasePersonality::SororityGirl => "Sorority Girl Marco",
+      BasePersonality::MafiaGoon => "Goon Marco",
+      BasePersonality::OldLibrarian => "Librarian Marco",
     }
   }
 
@@ -108,8 +114,8 @@ impl BasePersonality {
       BasePersonality::Witch => &["witch", "evil", "witches", "warlock", "warlocks",
                                   "spell", "spells", "hallow", "hallows", "hallow's", "halloween",
                                   "net", "nets"],
-      BasePersonality::Tourist => &["tourism", "tourist", "tourists", "book", "tour", "guide",
-                                    "books", "guides", "travel", "travels", "traveler", "travelers",
+      BasePersonality::Tourist => &["tourism", "tourist", "tourists", "tour", "guide",
+                                    "guides", "travel", "travels", "traveler", "travelers",
                                     "vacation", "distance", "chat", "chatty", "chatting", "chats"],
       BasePersonality::MovieNarrator => &["narrator", "movie", "movies", "narrators", "tv", "television",
                                           "televisions", "show", "watch", "watches", "watched", "watching"],
@@ -134,6 +140,11 @@ impl BasePersonality {
       BasePersonality::SororityGirl => &["sorority", "fraternity", "sororities", "fraternities", "girl",
                                          "girls", "gal", "gals", "college", "greek", "greece", "colleges",
                                          "school", "schools", "class", "classes"],
+      BasePersonality::MafiaGoon => &["goon", "goons", "mafia", "mafias", "gang", "gangs", "gangster",
+                                      "gangsters", "mafioso", "town", "townie", "vanilla"],
+      BasePersonality::OldLibrarian => &["librarian", "librarians", "library", "libraries",
+                                         "book", "books", "text", "textbook", "textbooks", "word",
+                                         "words", "old", "elderly", "maid"],
     }
   }
 }

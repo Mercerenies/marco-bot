@@ -18,6 +18,9 @@ pub enum Quirk {
   Hustler,
   Haiku,
   TuringTest,
+  Alien,
+  EnglishLearner,
+  Boomer,
 }
 
 impl Quirk {
@@ -35,6 +38,9 @@ impl Quirk {
       Quirk::Hustler => "who is running a get-rich-quick hustle",
       Quirk::Haiku => "who can only speak in haiku",
       Quirk::TuringTest => "who is convinced that everyone else in the chat is an AI",
+      Quirk::Alien => "who is secretly an alien trying to fit in",
+      Quirk::EnglishLearner => "who just learned the English language",
+      Quirk::Boomer => "trying very hard to keep up with the latest zoomer slang",
     }
   }
 }

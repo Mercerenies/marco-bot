@@ -23,7 +23,9 @@ pub const DEVELOPER_PROMPT: &str = "\
 
 /// The AI seems to want to put a character name at the beginning of
 /// each message, so we strip it.
-pub const NAMED_PREFIX_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(.{1,22}) Marco:\s+").unwrap());
+pub const NAMED_PREFIX_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(.{1,22}):\s+").unwrap());
+
+pub const QUOTES_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"^"|"$"#).unwrap());
 
 pub fn chat_completion<'a, I>(
   personality: &Personality,
@@ -57,12 +59,15 @@ pub async fn chat(
   client: &Client<OpenAIConfig>,
   req: CreateChatCompletionRequest,
 ) -> Result<String, OpenAIError> {
+  println!("Chatting with OpenAI: {:?}", &req);
   let response = client
     .chat()
     .create(req)
     .await?;
   let text = response.choices.first().unwrap().message.content.to_owned().unwrap();
-  Ok(NAMED_PREFIX_RE.replace_all(&text, "").to_string())
+  let text = NAMED_PREFIX_RE.replace_all(&text, "");
+  let text = QUOTES_RE.replace_all(&text, "");
+  Ok(text.to_string())
 }
 
 fn message_user_name(user: &MessageUser, mapping: &NicknameMap) -> String {

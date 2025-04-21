@@ -13,6 +13,8 @@ use serenity::prelude::*;
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::model::id::UserId;
+use serenity::model::channel::Channel;
+use serenity::builder::{CreateEmbed, CreateEmbedFooter, CreateMessage};
 use async_trait::async_trait;
 use regex::Regex;
 
@@ -64,7 +66,10 @@ impl MarcoBotState {
   }
 
   pub fn calculate_personality(&mut self, content: &str) {
-    run_personality_shift(content, &mut self.personality);
+    let changed = run_personality_shift(content, &mut self.personality);
+    if changed {
+      println!("New Personality: {}", self.personality);
+    }
   }
 }
 
@@ -79,15 +84,25 @@ impl EventHandler for MarcoBot {
   async fn message(&self, ctx: Context, msg: Message) {
     let bot_user_id = ctx.cache.current_user().id;
     if msg.author.id == bot_user_id {
-      // Ignore all messages from the bot.
-      return; // TODO Should also ignore (most) DMs
+      // Ignore all messages from the bot
+      return;
+    }
+
+    if msg.content == "!marco help" {
+      send_help_message(&ctx, &msg).await;
+      return;
+    }
+
+    if is_dm(&ctx, &msg).await {
+      // Ignore DMs
+      return;
     }
 
     let mut chat_completion = None;
     {
       let mut state = self.lock_state();
       state.calculate_personality(&msg.content);
-      // TODO Update nicknames map
+      state.nicknames.insert(msg.author.id, msg.author.name.clone());
       state.messages.push_back(message::Message {
         user: message::MessageUser::DiscordUser { user_id: msg.author.id },
         content: msg.content.to_owned(),
@@ -127,4 +142,27 @@ impl EventHandler for MarcoBot {
 fn is_bot_mentioned(bot_user_id: UserId, msg: &Message) -> bool {
   BOT_NAME_RE.is_match(&msg.content) ||
     msg.mentions.iter().any(|mention| mention.id == bot_user_id)
+}
+
+async fn is_dm(ctx: &Context, msg: &Message) -> bool {
+  match msg.channel(&ctx).await {
+    Ok(Channel::Private(_)) => true,
+    _ => false,
+  }
+}
+
+async fn send_help_message(ctx: &Context, msg: &Message) {
+  let help_embed = CreateEmbed::default()
+    .title("Marco Bot Help")
+    .description("Marco is a Discord bot written by Mercerenies. Check the link above for more details")
+    .field("!marco help", "Displays this help message.", false)
+    .url("https://github.com/Mercerenies/marco-bot")
+    .footer(CreateEmbedFooter::new("Thank you for using Marco Bot!"));
+
+  let message = CreateMessage::default()
+    .embed(help_embed);
+
+  if let Err(why) = msg.channel_id.send_message(&ctx.http, message).await {
+    eprintln!("Error sending help message: {:?}", why);
+  }
 }
