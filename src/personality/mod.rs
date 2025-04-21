@@ -33,6 +33,10 @@ impl Personality {
       quirk,
     }
   }
+
+  pub fn marco_name(&self) -> &'static str {
+    self.base_personality.marco_name()
+  }
 }
 
 impl Display for Personality {

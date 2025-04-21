@@ -15,7 +15,7 @@ pub struct MessageHistory {
 #[derive(Debug, Clone)]
 pub struct Message {
   pub user: MessageUser,
-  pub contents: String,
+  pub content: String,
 }
 
 /// The sender of the message, either a traditional Discord user or
