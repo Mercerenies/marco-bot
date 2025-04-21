@@ -23,7 +23,7 @@ pub const DEVELOPER_PROMPT: &str = "\
 
 /// The AI seems to want to put a character name at the beginning of
 /// each message, so we strip it.
-pub const NAMED_PREFIX_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(.{1,22}):\s+").unwrap());
+pub const NAMED_PREFIX_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(.{1,32}):\s+").unwrap());
 
 pub const QUOTES_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"^"|"$"#).unwrap());
 
