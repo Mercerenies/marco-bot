@@ -9,7 +9,7 @@ async fn main() -> anyhow::Result<()> {
   let discord_token = get_discord_token();
   let intents = gateway_intents();
 
-  let bot = MarcoBot::new();
+  let bot = MarcoBot::new_random();
   let mut client = Client::builder(&discord_token, intents)
     .event_handler(bot)
     .await?;

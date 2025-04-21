@@ -49,6 +49,13 @@ impl MarcoBot {
     }
   }
 
+  pub fn new_random() -> Self {
+    Self {
+      state: Mutex::new(MarcoBotState::new_random()),
+      client: Client::new(),
+    }
+  }
+
   pub fn lock_state(&self) -> MutexGuard<MarcoBotState> {
     self.state.lock().unwrap()
   }
@@ -62,6 +69,16 @@ impl MarcoBotState {
       messages: MessageHistory::new(Self::MESSAGE_HISTORY_CAPACITY),
       nicknames: NicknameMap::new(),
       personality: Personality::default(),
+    }
+  }
+
+  pub fn new_random() -> Self {
+    let personality = Personality::generate_random();
+    println!("Starting Personality: {}", personality);
+    Self {
+      messages: MessageHistory::new(Self::MESSAGE_HISTORY_CAPACITY),
+      nicknames: NicknameMap::new(),
+      personality,
     }
   }
 
