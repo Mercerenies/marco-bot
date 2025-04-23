@@ -28,6 +28,7 @@ pub enum Quirk {
   Spinning,
   Dating,
   NewGirlfriend,
+  PetNames,
 }
 
 impl Quirk {
@@ -55,6 +56,7 @@ impl Quirk {
       Quirk::Spinning => "who thinks the room is spinning",
       Quirk::Dating => "who is looking for a date really hard",
       Quirk::NewGirlfriend => "who really wants to tell everyone about their new girlfriend",
+      Quirk::PetNames => "who loves having obnoxious and cute pet names for everyone",
     }
   }
 }

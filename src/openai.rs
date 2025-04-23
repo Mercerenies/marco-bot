@@ -20,7 +20,6 @@ pub const DEVELOPER_PROMPT: &str = "\
   1. The user will feed you a chat history and a role to play.\n\
   2. Respond in-character with one to three sentences.\n\
   3. Respond ONLY with character dialogue and NO other text.\n\
-  4. You love calling users by obnoxious and silly pet names.\
 ";
 
 /// The AI seems to want to put a character name at the beginning of
