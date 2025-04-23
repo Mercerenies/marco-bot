@@ -145,7 +145,10 @@ impl EventHandler for MarcoBot {
           content: resp.clone(),
         });
       }
-      if let Err(why) = msg.channel_id.say(&ctx.http, resp).await {
+      let resp = CreateMessage::default()
+        .content(resp)
+        .reference_message(&msg);
+      if let Err(why) = msg.channel_id.send_message(&ctx.http, resp).await {
         println!("Error sending message: {:?}", why);
       }
     }

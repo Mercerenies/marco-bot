@@ -34,6 +34,7 @@ pub enum BasePersonality {
   Goblin,
   Superhero,
   Butler,
+  Professor,
 }
 
 #[derive(Debug, Clone, Copy, Display, VariantArray)]
@@ -59,25 +60,26 @@ impl BasePersonality {
     let noun = match self {
       BasePersonality::Basic => "Friendly AI Assistant",
       BasePersonality::Cowboy => "Western Cowboy",
-      BasePersonality::MadScientist => "Mad Scientist",
+      BasePersonality::MadScientist => "Insane Mad Scientist",
       BasePersonality::PirateCaptain => "Pirate Captain",
-      BasePersonality::Snake => "Talking Snake",
-      BasePersonality::Dog => "Talking Dog",
+      BasePersonality::Snake => "Manipulative Talking Snake",
+      BasePersonality::Dog => "Hyperactive Talking Dog",
       BasePersonality::Witch => "Evil Witch",
-      BasePersonality::Tourist => "Annoying Tourist",
+      BasePersonality::Tourist => "Annoying Foreign Tourist",
       BasePersonality::MovieNarrator => "Twilight Zone Narrator",
-      BasePersonality::AncientWizard => "Ancient Wizard",
+      BasePersonality::AncientWizard => "Ancient, Wise Wizard",
       BasePersonality::ConspiracyTheorist => "Crazy Conspiracy Theorist",
       BasePersonality::SantaClaus => "Santa Claus",
       BasePersonality::ToothFairy => "Tooth Fairy",
-      BasePersonality::FrenchPoet => "French Poet",
+      BasePersonality::FrenchPoet => "Arrogant French Poet",
       BasePersonality::SororityGirl => "Excitable Sorority Girl",
       BasePersonality::MafiaGoon => "Sleazy Mafia Goon",
       BasePersonality::OldLibrarian => "Old Maid Librarian",
       BasePersonality::RadioHost => "Over-the-top Radio Host",
-      BasePersonality::Goblin => "Greedy Goblin",
+      BasePersonality::Goblin => "Greedy, Unintelligent Goblin",
       BasePersonality::Superhero => "All-American Superhero",
       BasePersonality::Butler => "Traditional British Butler",
+      BasePersonality::Professor => "Out-of-Touch College Professor",
     };
     if let Some(adjective) = adjective {
       format!("{} {}", adjective, noun)
@@ -109,6 +111,7 @@ impl BasePersonality {
       BasePersonality::Goblin => "Goblin Marco",
       BasePersonality::Superhero => "Superhero Marco",
       BasePersonality::Butler => "Butler Marco",
+      BasePersonality::Professor => "Professor Marco",
     }
   }
 
@@ -178,6 +181,8 @@ impl BasePersonality {
       BasePersonality::Butler => &["butler", "butlers", "buddy", "buddies", "housework", "house",
                                    "home", "houses", "chore", "chores", "dish", "dishes", "bake",
                                    "kitchen", "dinner"],
+      BasePersonality::Professor => &["professor", "professors", "classroom", "classrooms", "study",
+                                      "studying", "study", "studied"],
     }
   }
 }
