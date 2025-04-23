@@ -117,7 +117,7 @@ impl EventHandler for MarcoBot {
     }
 
     let mut chat_completion = None;
-    let mut typing = None;
+    let mut _typing = None; // unused variable reason: Semantically-significant drop glue
     {
       let mut state = self.lock_state();
       state.calculate_personality(&msg.content);
@@ -128,7 +128,7 @@ impl EventHandler for MarcoBot {
       });
       if is_bot_mentioned(bot_user_id, &msg) {
         chat_completion = Some(openai::chat_completion(&state.personality, state.messages.iter(), &state.nicknames));
-        typing = Some(Typing::start(ctx.http.clone(), msg.channel_id));
+        _typing = Some(Typing::start(ctx.http.clone(), msg.channel_id));
       }
     }
     // Note: Drop mutex here so we don't hold it over an await boundary.
