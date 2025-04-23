@@ -145,9 +145,13 @@ impl EventHandler for MarcoBot {
           content: resp.clone(),
         });
       }
-      let resp = CreateMessage::default()
-        .content(resp)
-        .reference_message(&msg);
+      let mut resp = CreateMessage::default()
+        .content(resp);
+      // I would love to reply to all messages, but replying to bots
+      // causes an infinite loop WAY too often. This is a stop-gap.
+      if !msg.author.bot {
+        resp = resp.reference_message(&msg);
+      }
       if let Err(why) = msg.channel_id.send_message(&ctx.http, resp).await {
         println!("Error sending message: {:?}", why);
       }
