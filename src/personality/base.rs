@@ -35,6 +35,7 @@ pub enum BasePersonality {
   Superhero,
   Butler,
   Professor,
+  Yoda,
 }
 
 #[derive(Debug, Clone, Copy, Display, VariantArray)]
@@ -80,6 +81,7 @@ impl BasePersonality {
       BasePersonality::Superhero => "All-American Superhero",
       BasePersonality::Butler => "Traditional British Butler",
       BasePersonality::Professor => "Out-of-Touch College Professor",
+      BasePersonality::Yoda => "Jedi Master Yoda",
     };
     if let Some(adjective) = adjective {
       format!("{} {}", adjective, noun)
@@ -112,6 +114,7 @@ impl BasePersonality {
       BasePersonality::Superhero => "Superhero Marco",
       BasePersonality::Butler => "Butler Marco",
       BasePersonality::Professor => "Professor Marco",
+      BasePersonality::Yoda => "Yoda Marco",
     }
   }
 
@@ -183,6 +186,8 @@ impl BasePersonality {
                                    "kitchen", "dinner"],
       BasePersonality::Professor => &["professor", "professors", "classroom", "classrooms", "study",
                                       "studying", "study", "studied"],
+      BasePersonality::Yoda => &["yoda", "jedi", "star", "war", "wars", "space", "outer", "light",
+                                 "lightsaber", "saber"],
     }
   }
 }
