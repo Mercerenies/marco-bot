@@ -15,7 +15,12 @@ use regex::Regex;
 
 use std::sync::LazyLock;
 
-pub const DEVELOPER_PROMPT: &str = "\
+#[derive(Debug, Clone)]
+pub struct DeveloperPromptConfig {
+  pub pet_name_mode: bool,
+}
+
+pub const BASE_DEVELOPER_PROMPT: &str = "\
   You are Marco, a Discord bot. You are roleplaying in a Discord server.\n\
   1. The user will feed you a chat history and a role to play.\n\
   2. Respond in-character with one to three sentences.\n\
@@ -32,6 +37,7 @@ pub fn chat_completion<'a, I>(
   personality: &Personality,
   chat_history: I,
   mapping: &NicknameMap,
+  config: &DeveloperPromptConfig,
 ) -> CreateChatCompletionRequest
 where I: IntoIterator<Item = &'a Message> {
   let recent_messages = chat_history
@@ -49,11 +55,19 @@ where I: IntoIterator<Item = &'a Message> {
     .model("gpt-4o-mini")
     .n(1)
     .messages(vec![
-      ChatCompletionRequestMessage::Developer(DEVELOPER_PROMPT.into()),
+      ChatCompletionRequestMessage::Developer(get_developer_prompt(config).into()),
       ChatCompletionRequestMessage::User(user_prompt.into()),
     ])
     .build()
     .unwrap()
+}
+
+fn get_developer_prompt(config: &DeveloperPromptConfig) -> String {
+  if config.pet_name_mode {
+    format!("{BASE_DEVELOPER_PROMPT}\n4. You love giving other users in the chat obnoxious and adorable pet names.\n")
+  } else {
+    String::from(BASE_DEVELOPER_PROMPT)
+  }
 }
 
 pub async fn chat(

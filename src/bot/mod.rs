@@ -28,6 +28,12 @@ pub const BOT_NAME_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i:\bmar
 pub struct MarcoBot {
   state: Mutex<MarcoBotState>,
   client: Client<OpenAIConfig>,
+  config: MarcoBotConfig,
+}
+
+#[derive(Debug)]
+pub struct MarcoBotConfig {
+  pub pet_name_mode: bool,
 }
 
 /// An instance of this Discord bot's current state.
@@ -43,17 +49,19 @@ pub fn gateway_intents() -> GatewayIntents {
 }
 
 impl MarcoBot {
-  pub fn new() -> Self {
+  pub fn new(config: MarcoBotConfig) -> Self {
     Self {
       state: Mutex::new(MarcoBotState::new()),
       client: Client::new(),
+      config,
     }
   }
 
-  pub fn new_random() -> Self {
+  pub fn new_random(config: MarcoBotConfig) -> Self {
     Self {
       state: Mutex::new(MarcoBotState::new_random()),
       client: Client::new(),
+      config,
     }
   }
 
@@ -127,7 +135,10 @@ impl EventHandler for MarcoBot {
         content: msg.content.to_owned(),
       });
       if is_bot_mentioned(bot_user_id, &msg) {
-        chat_completion = Some(openai::chat_completion(&state.personality, state.messages.iter(), &state.nicknames));
+        let config = openai::DeveloperPromptConfig {
+          pet_name_mode: self.config.pet_name_mode,
+        };
+        chat_completion = Some(openai::chat_completion(&state.personality, state.messages.iter(), &state.nicknames, &config));
         _typing = Some(Typing::start(ctx.http.clone(), msg.channel_id));
       }
     }

@@ -1,5 +1,5 @@
 
-use marco::bot::{MarcoBot, gateway_intents};
+use marco::bot::{MarcoBot, MarcoBotConfig, gateway_intents};
 use marco::environ::get_discord_token;
 
 use serenity::prelude::*;
@@ -9,7 +9,13 @@ async fn main() -> anyhow::Result<()> {
   let discord_token = get_discord_token();
   let intents = gateway_intents();
 
-  let bot = MarcoBot::new_random();
+  let mut config = MarcoBotConfig {
+    pet_name_mode: false,
+  };
+  let args: Vec<String> = std::env::args().collect();
+  config.pet_name_mode = args.contains(&"--pet-name".to_string());
+
+  let bot = MarcoBot::new_random(config);
   let mut client = Client::builder(&discord_token, intents)
     .event_handler(bot)
     .await?;
