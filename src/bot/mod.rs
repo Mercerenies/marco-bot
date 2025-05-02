@@ -4,7 +4,7 @@ pub mod nicknames;
 
 use message::MessageHistory;
 use nicknames::NicknameMap;
-use crate::personality::{Personality, run_personality_shift};
+use crate::personality::{FullPersonality, generate_personality};
 use crate::openai;
 
 use async_openai::Client;
@@ -28,18 +28,18 @@ pub const BOT_NAME_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i:\bmar
 pub struct MarcoBot {
   state: Mutex<MarcoBotState>,
   client: Client<OpenAIConfig>,
+  #[expect(dead_code)] // Currently, config is not used :)
   config: MarcoBotConfig,
 }
 
+// Currently unused
 #[derive(Debug)]
-pub struct MarcoBotConfig {
-  pub pet_name_mode: bool,
-}
+pub struct MarcoBotConfig {}
 
 /// An instance of this Discord bot's current state.
 #[derive(Debug)]
 pub struct MarcoBotState {
-  pub personality: Personality,
+  pub personality: FullPersonality,
   pub messages: MessageHistory,
   pub nicknames: NicknameMap,
 }
@@ -57,12 +57,8 @@ impl MarcoBot {
     }
   }
 
-  pub fn new_random(config: MarcoBotConfig) -> Self {
-    Self {
-      state: Mutex::new(MarcoBotState::new_random()),
-      client: Client::new(),
-      config,
-    }
+  pub fn client(&self) -> &Client<OpenAIConfig> {
+    &self.client
   }
 
   pub fn lock_state(&self) -> MutexGuard<MarcoBotState> {
@@ -77,25 +73,15 @@ impl MarcoBotState {
     Self {
       messages: MessageHistory::new(Self::MESSAGE_HISTORY_CAPACITY),
       nicknames: NicknameMap::new(),
-      personality: Personality::default(),
+      personality: FullPersonality::default(),
     }
   }
 
-  pub fn new_random() -> Self {
-    let personality = Personality::generate_random();
-    println!("Starting Personality: {}", personality);
-    Self {
-      messages: MessageHistory::new(Self::MESSAGE_HISTORY_CAPACITY),
-      nicknames: NicknameMap::new(),
-      personality,
-    }
-  }
-
-  pub fn calculate_personality(&mut self, content: &str) {
-    let changed = run_personality_shift(content, &mut self.personality);
-    if changed {
-      println!("New Personality: {}", self.personality);
-    }
+  pub async fn roll_personality(&mut self, client: &Client<OpenAIConfig>) -> anyhow::Result<()> {
+    let personality = generate_personality(client).await?;
+    println!("Setting Personality: {}", personality.tagline());
+    self.personality = personality;
+    Ok(())
   }
 }
 
@@ -119,6 +105,11 @@ impl EventHandler for MarcoBot {
       return;
     }
 
+    if msg.content == "!marco reroll" {
+      ///// TODO
+      return;
+    }
+
     if is_dm(&ctx, &msg).await {
       // Ignore DMs
       return;
@@ -128,16 +119,13 @@ impl EventHandler for MarcoBot {
     let mut _typing = None; // unused variable reason: Semantically-significant drop glue
     {
       let mut state = self.lock_state();
-      state.calculate_personality(&msg.content);
       state.nicknames.insert(msg.author.id, msg.author.name.clone());
       state.messages.push_back(message::Message {
         user: message::MessageUser::DiscordUser { user_id: msg.author.id },
         content: msg.content.to_owned(),
       });
       if is_bot_mentioned(bot_user_id, &msg) {
-        let config = openai::DeveloperPromptConfig {
-          pet_name_mode: self.config.pet_name_mode,
-        };
+        let config = openai::DeveloperPromptConfig {};
         chat_completion = Some(openai::chat_completion(&state.personality, state.messages.iter(), &state.nicknames, &config));
         _typing = Some(Typing::start(ctx.http.clone(), msg.channel_id));
       }
@@ -153,7 +141,7 @@ impl EventHandler for MarcoBot {
       };
       {
         let mut state = self.lock_state();
-        let user = message::MessageUser::Marco { identity: state.personality.marco_name().to_owned() };
+        let user = message::MessageUser::Marco { identity: state.personality.name.clone() };
         state.messages.push_back(message::Message {
           user,
           content: resp.clone(),

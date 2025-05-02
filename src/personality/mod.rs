@@ -1,69 +1,23 @@
 
 pub mod base;
-mod quirk;
-mod trigger;
+mod template;
+mod tag;
 
-pub use base::{BasePersonality, Adjective};
-pub use quirk::Quirk;
-pub use trigger::run_personality_shift;
+pub use base::BasePersonality;
+pub use tag::PersonalityTag;
+pub use template::{PersonalityTemplate, FullPersonality, flesh_out_personality};
 
-use rand::{rng, Rng};
+use rand::rng;
 use rand::seq::IndexedRandom;
 use strum::VariantArray;
+use async_openai::Client;
+use async_openai::config::OpenAIConfig;
 
-use std::fmt::{self, Display};
-
-#[derive(Debug, Clone)]
-pub struct Personality {
-  pub base_personality: BasePersonality,
-  pub adjective: Option<Adjective>,
-  pub quirk: Option<Quirk>,
-}
-
-impl Personality {
-  pub fn generate(base_personality: BasePersonality) -> Self {
-    let mut random = rng();
-    let adjective = if random.random::<f32>() < 0.1 {
-      Some(random.random())
-    } else {
-      None
-    };
-    let quirk = Some(random.random());
-    Personality {
-      base_personality,
-      adjective,
-      quirk,
-    }
-  }
-
-  pub fn generate_random() -> Self {
-    let mut random = rng();
-    let mut options: Vec<_> = BasePersonality::VARIANTS.into_iter().copied().collect();
-    options.remove(0); // Never generate the [`BasePersonality::Basic`] personality.
-    Personality::generate(*options.choose(&mut random).unwrap())
-  }
-
-  pub fn marco_name(&self) -> &'static str {
-    self.base_personality.marco_name()
-  }
-}
-
-impl Display for Personality {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    write!(f, "{}", self.base_personality.long_name(self.adjective))?;
-    if let Some(quirk) = &self.quirk {
-      write!(f, " {}", quirk.phrase())?;
-    }
-    Ok(())
-  }
-}
-
-impl Default for Personality {
-  fn default() -> Self {
-    Personality {
-      base_personality: BasePersonality::default(),
-      adjective: None,
-      quirk: None,
-    }
-  }
+pub async fn generate_personality(client: &Client<OpenAIConfig>) -> anyhow::Result<FullPersonality> {
+  let mut random = rng();
+  let base_personality = *BasePersonality::VARIANTS.choose(&mut random).unwrap();
+  let tags_count = [(2, 0.3), (3, 0.6), (4, 0.1)].choose_weighted(&mut random, |w| w.1).unwrap().0;
+  let tags = PersonalityTag::VARIANTS.choose_multiple(&mut random, tags_count).copied().collect();
+  let template = PersonalityTemplate { base_personality, tags };
+  flesh_out_personality(&client, &template).await
 }

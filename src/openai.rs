@@ -3,7 +3,7 @@
 
 use crate::bot::nicknames::NicknameMap;
 use crate::bot::message::{Message, MessageUser};
-use crate::personality::Personality;
+use crate::personality::FullPersonality;
 
 use async_openai::Client;
 use async_openai::types::{CreateChatCompletionRequest, CreateChatCompletionRequestArgs,
@@ -15,17 +15,18 @@ use regex::Regex;
 
 use std::sync::LazyLock;
 
+// Currently unused
 #[derive(Debug, Clone)]
-pub struct DeveloperPromptConfig {
-  pub pet_name_mode: bool,
-}
+pub struct DeveloperPromptConfig {}
 
 pub const BASE_DEVELOPER_PROMPT: &str = "\
   You are Marco, a Discord bot. You are roleplaying in a Discord server.\n\
   1. The user will feed you a chat history and a role to play.\n\
   2. Respond in-character with one to three sentences.\n\
-  3. Respond ONLY with character dialogue and NO other text.\n\
+  3. Respond ONLY in-character with dialogue and NO other text.\n\
 ";
+
+pub const OPENAI_MODEL: &str = "gpt-4o-mini";
 
 /// The AI seems to want to put a character name at the beginning of
 /// each message, so we strip it.
@@ -34,25 +35,26 @@ pub const NAMED_PREFIX_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(.{1
 pub const QUOTES_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"^["“]|["”]$"#).unwrap());
 
 pub fn chat_completion<'a, I>(
-  personality: &Personality,
+  personality: &FullPersonality,
   chat_history: I,
   mapping: &NicknameMap,
   config: &DeveloperPromptConfig,
 ) -> CreateChatCompletionRequest
 where I: IntoIterator<Item = &'a Message> {
+  let personality_tagline = personality.tagline();
   let recent_messages = chat_history
     .into_iter()
     .map(|message| format!("{}: {}", message_user_name(&message.user, mapping), message.content))
     .join("\n");
   let user_prompt = format!("\
-    Your role: {personality}\n\
+    Your role: {personality_tagline}\n\
     Recent Chat History:\n\
     ```\n\
     {recent_messages}\n\
     ```\
   ");
   CreateChatCompletionRequestArgs::default()
-    .model("gpt-4o-mini")
+    .model(OPENAI_MODEL)
     .n(1)
     .messages(vec![
       ChatCompletionRequestMessage::Developer(get_developer_prompt(config).into()),
@@ -62,12 +64,8 @@ where I: IntoIterator<Item = &'a Message> {
     .unwrap()
 }
 
-fn get_developer_prompt(config: &DeveloperPromptConfig) -> String {
-  if config.pet_name_mode {
-    format!("{BASE_DEVELOPER_PROMPT}\n4. You love giving other users in the chat obnoxious and adorable pet names.\n")
-  } else {
-    String::from(BASE_DEVELOPER_PROMPT)
-  }
+fn get_developer_prompt(#[expect(unused_variables)] config: &DeveloperPromptConfig) -> String {
+  String::from(BASE_DEVELOPER_PROMPT)
 }
 
 pub async fn chat(
@@ -89,7 +87,7 @@ fn message_user_name(user: &MessageUser, mapping: &NicknameMap) -> String {
   match user {
     MessageUser::DiscordUser { user_id } =>
       mapping.get(&user_id).unwrap_or("User").to_owned(),
-    MessageUser::Marco { identity } =>
-      identity.clone(),
+    MessageUser::Marco { identity: _ } =>
+      String::from("You"),
   }
 }

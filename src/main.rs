@@ -9,13 +9,11 @@ async fn main() -> anyhow::Result<()> {
   let discord_token = get_discord_token();
   let intents = gateway_intents();
 
-  let mut config = MarcoBotConfig {
-    pet_name_mode: false,
-  };
-  let args: Vec<String> = std::env::args().collect();
-  config.pet_name_mode = args.contains(&"--pet-name".to_string());
+  let config = MarcoBotConfig {};
+  //let args: Vec<String> = std::env::args().collect();
 
-  let bot = MarcoBot::new_random(config);
+  let bot = MarcoBot::new(config);
+  initialize_starting_personality(&bot).await?;
   let mut client = Client::builder(&discord_token, intents)
     .event_handler(bot)
     .await?;
@@ -23,5 +21,12 @@ async fn main() -> anyhow::Result<()> {
   // Start listening for events by starting a single shard
   client.start().await?;
 
+  Ok(())
+}
+
+async fn initialize_starting_personality(bot: &MarcoBot) -> anyhow::Result<()> {
+  let mut state = bot.lock_state();
+  let client = bot.client();
+  state.roll_personality(&client).await?;
   Ok(())
 }
