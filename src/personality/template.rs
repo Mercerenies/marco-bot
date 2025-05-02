@@ -58,7 +58,7 @@ impl PersonalityTemplate {
       Output Format:\n\
       ```\n\
       Name: (name)\n\
-      Synopsis: (One-sentence)\n\
+      Synopsis: (Short, one-sentence)\n\
       ```\
     ")
   }

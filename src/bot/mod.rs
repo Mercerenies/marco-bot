@@ -16,6 +16,7 @@ use serenity::model::id::UserId;
 use serenity::model::channel::Channel;
 use serenity::http::Typing;
 use serenity::builder::{CreateEmbed, CreateEmbedFooter, CreateMessage};
+use serenity::gateway::ActivityData;
 use async_trait::async_trait;
 use regex::Regex;
 
@@ -77,11 +78,14 @@ impl MarcoBotState {
     }
   }
 
-  pub async fn roll_personality(&mut self, client: &Client<OpenAIConfig>) -> anyhow::Result<()> {
-    let personality = generate_personality(client).await?;
+  fn refresh_activity(&self, ctx: &Context) {
+    let activity_data = ActivityData::custom(&self.personality.name);
+    ctx.set_activity(Some(activity_data));
+  }
+
+  pub fn set_personality(&mut self, personality: FullPersonality) {
     println!("Setting Personality: {}", personality.tagline());
     self.personality = personality;
-    Ok(())
   }
 }
 
@@ -100,14 +104,34 @@ impl EventHandler for MarcoBot {
       return;
     }
 
-    if msg.content == "!marco help" {
-      send_help_message(&ctx, &msg).await;
-      return;
-    }
+    // Special command checks
+    if !msg.author.bot {
+      if msg.content == "!marco help" {
+        send_help_message(&ctx, &msg).await;
+        return;
+      }
 
-    if msg.content == "!marco reroll" {
-      ///// TODO
-      return;
+      if msg.content == "!marco reroll" {
+        let new_personality = match generate_personality(&self.client).await {
+          Ok(p) => p,
+          Err(e) => {
+            println!("Error from OpenAI: {:?}", e);
+            return;
+          }
+        };
+        let name = new_personality.name.to_owned();
+        {
+          let mut state = self.lock_state();
+          state.set_personality(new_personality);
+        }
+        let resp = CreateMessage::default()
+          .content(format!("Introducing {name}!"))
+          .reference_message(&msg);
+        if let Err(why) = msg.channel_id.send_message(&ctx.http, resp).await {
+          println!("Error sending reroll message: {:?}", why);
+        }
+        return;
+      }
     }
 
     if is_dm(&ctx, &msg).await {
@@ -160,8 +184,10 @@ impl EventHandler for MarcoBot {
     }
   }
 
-  async fn ready(&self, _: Context, ready: Ready) {
+  async fn ready(&self, ctx: Context, ready: Ready) {
     println!("{} is connected!", ready.user.name);
+    let state = self.lock_state();
+    state.refresh_activity(&ctx);
   }
 }
 
@@ -182,6 +208,7 @@ async fn send_help_message(ctx: &Context, msg: &Message) {
     .title("Marco Bot Help")
     .description("Marco is a Discord bot written by Mercerenies. Check the link above for more details")
     .field("!marco help", "Displays this help message.", false)
+    .field("!marco reroll", "Roll a new personality for Marco.", false)
     .url("https://github.com/Mercerenies/marco-bot")
     .footer(CreateEmbedFooter::new("Thank you for using Marco Bot!"));
 

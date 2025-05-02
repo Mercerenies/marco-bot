@@ -1,6 +1,7 @@
 
 use marco::bot::{MarcoBot, MarcoBotConfig, gateway_intents};
 use marco::environ::get_discord_token;
+use marco::personality::generate_personality;
 
 use serenity::prelude::*;
 
@@ -25,8 +26,8 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn initialize_starting_personality(bot: &MarcoBot) -> anyhow::Result<()> {
+  let new_personality = generate_personality(bot.client()).await?;
   let mut state = bot.lock_state();
-  let client = bot.client();
-  state.roll_personality(&client).await?;
+  state.set_personality(new_personality);
   Ok(())
 }
