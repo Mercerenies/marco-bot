@@ -8,7 +8,6 @@ use strum::{Display, VariantArray};
 pub enum PersonalityTag {
   TimeTraveler,
   Dramatic,
-  Narcoleptic,
   SoftSpoken,
   Optimistic,
   TeaObsessed,
