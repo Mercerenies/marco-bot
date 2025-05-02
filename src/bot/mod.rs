@@ -1,6 +1,7 @@
 
 pub mod message;
 pub mod nicknames;
+pub mod passive;
 
 use message::MessageHistory;
 use nicknames::NicknameMap;
@@ -21,13 +22,21 @@ use serenity::gateway::ActivityData;
 use async_trait::async_trait;
 use regex::Regex;
 
-use std::sync::{Mutex, MutexGuard, LazyLock};
+use std::sync::{Arc, Mutex, MutexGuard, LazyLock};
 
 pub const BOT_NAME_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i:\bmarco\b)").unwrap());
 
 /// An instance of this Discord bot.
-#[derive(Debug)]
+///
+/// Implemented as an [`Arc`], so the [`Clone`] impl for this type is
+/// cheap and reference-based.
+#[derive(Debug, Clone)]
 pub struct MarcoBot {
+  inner: Arc<MarcoBotImpl>,
+}
+
+#[derive(Debug)]
+pub struct MarcoBotImpl {
   state: Mutex<MarcoBotState>,
   client: Client<OpenAIConfig>,
   #[expect(dead_code)] // Currently, config is not used :)
@@ -56,19 +65,20 @@ pub fn gateway_intents() -> GatewayIntents {
 
 impl MarcoBot {
   pub fn new(config: MarcoBotConfig) -> Self {
-    Self {
+    let inner = MarcoBotImpl {
       state: Mutex::new(MarcoBotState::new()),
       client: Client::new(),
       config,
-    }
+    };
+    Self { inner: Arc::new(inner) }
   }
 
   pub fn client(&self) -> &Client<OpenAIConfig> {
-    &self.client
+    &self.inner.client
   }
 
   pub fn lock_state(&self) -> MutexGuard<MarcoBotState> {
-    self.state.lock().unwrap()
+    self.inner.state.lock().unwrap()
   }
 }
 
@@ -122,7 +132,7 @@ impl EventHandler for MarcoBot {
       }
 
       if msg.content == "!marco reroll" {
-        let new_personality = match generate_personality(&self.client).await {
+        let new_personality = match generate_personality(self.client()).await {
           Ok(p) => p,
           Err(e) => {
             println!("Error from OpenAI: {:?}", e);
@@ -177,7 +187,7 @@ impl EventHandler for MarcoBot {
     }
     // Note: Drop mutex here so we don't hold it over an await boundary.
     if let Some(chat_completion) = chat_completion {
-      let resp = match openai::chat(&self.client, chat_completion).await {
+      let resp = match openai::chat(self.client(), chat_completion).await {
         Ok(resp) => resp,
         Err(e) => {
           println!("Error from OpenAI: {:?}", e);
@@ -207,8 +217,11 @@ impl EventHandler for MarcoBot {
 
   async fn ready(&self, ctx: Context, ready: Ready) {
     println!("{} is connected!", ready.user.name);
-    let state = self.lock_state();
-    state.refresh_activity(&ctx);
+    {
+      let state = self.lock_state();
+      state.refresh_activity(&ctx);
+    }
+    passive::schedule_reroll_task(self.clone(), ctx);
   }
 }
 
