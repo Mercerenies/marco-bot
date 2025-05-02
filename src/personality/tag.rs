@@ -54,7 +54,6 @@ pub enum PersonalityTag {
   AfraidOfEverything,
   OnParole,
   WitnessProtection,
-  SockPuppet,
   DoesntGetSlang,
   Influencer,
   Insane,
