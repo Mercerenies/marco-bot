@@ -1,15 +1,15 @@
 
 //! Message history deque.
 
-use serenity::model::id::UserId;
+use crate::util::CapacityDeque;
 
-use std::collections::VecDeque;
+use serenity::model::id::UserId;
 
 /// Recent chat history that the bot is aware of.
 #[derive(Debug, Clone)]
 pub struct MessageHistory {
-  messages: VecDeque<Message>,
-  capacity: usize,
+  recent_referred_messages: CapacityDeque<Message>,
+  recent_messages: CapacityDeque<Message>,
 }
 
 #[derive(Debug, Clone)]
@@ -30,33 +30,25 @@ pub enum MessageUser {
 }
 
 impl MessageHistory {
-  pub fn new(capacity: usize) -> MessageHistory {
+  pub fn new(referred_cap: usize, regular_cap: usize) -> MessageHistory {
     MessageHistory {
-      messages: VecDeque::new(),
-      capacity,
+      recent_referred_messages: CapacityDeque::new(referred_cap),
+      recent_messages: CapacityDeque::new(regular_cap),
     }
   }
 
-  pub fn len(&self) -> usize {
-    self.messages.len()
-  }
-
-  pub fn is_empty(&self) -> bool {
-    self.messages.is_empty()
-  }
-
-  pub fn capacity(&self) -> usize {
-    self.capacity
-  }
-
-  pub fn push_back(&mut self, message: Message) {
-    while self.messages.len() >= self.capacity {
-      self.messages.pop_front();
+  pub fn push_back(&mut self, message: Message, referred: bool) {
+    if referred {
+      self.recent_referred_messages.push_back(message.clone());
     }
-    self.messages.push_back(message);
+    self.recent_messages.push_back(message);
   }
 
-  pub fn iter(&self) -> impl Iterator<Item = &Message> {
-    self.messages.iter()
+  pub fn messages(&self) -> &CapacityDeque<Message> {
+    &self.recent_messages
+  }
+
+  pub fn referred_messages(&self) -> &CapacityDeque<Message> {
+    &self.recent_referred_messages
   }
 }

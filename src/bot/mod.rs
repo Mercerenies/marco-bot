@@ -68,11 +68,12 @@ impl MarcoBot {
 }
 
 impl MarcoBotState {
-  pub const MESSAGE_HISTORY_CAPACITY: usize = 10;
+  pub const MESSAGE_HISTORY_CAPACITY: usize = 7;
+  pub const MESSAGE_REFER_HISTORY_CAPACITY: usize = 4;
 
   pub fn new() -> Self {
     Self {
-      messages: MessageHistory::new(Self::MESSAGE_HISTORY_CAPACITY),
+      messages: MessageHistory::new(Self::MESSAGE_REFER_HISTORY_CAPACITY, Self::MESSAGE_HISTORY_CAPACITY),
       nicknames: NicknameMap::new(),
       personality: FullPersonality::default(),
     }
@@ -142,15 +143,23 @@ impl EventHandler for MarcoBot {
     let mut chat_completion = None;
     let mut _typing = None; // unused variable reason: Semantically-significant drop glue
     {
+      let mentioned = is_bot_mentioned(bot_user_id, &msg);
       let mut state = self.lock_state();
       state.nicknames.insert(msg.author.id, msg.author.name.clone());
-      state.messages.push_back(message::Message {
+      let message = message::Message {
         user: message::MessageUser::DiscordUser { user_id: msg.author.id },
         content: msg.content.to_owned(),
-      });
-      if is_bot_mentioned(bot_user_id, &msg) {
+      };
+      state.messages.push_back(message, mentioned);
+      if mentioned {
         let config = openai::DeveloperPromptConfig {};
-        chat_completion = Some(openai::chat_completion(&state.personality, state.messages.iter(), &state.nicknames, &config));
+        chat_completion = Some(openai::chat_completion(
+          &state.personality,
+          state.messages.messages().iter(),
+          state.messages.referred_messages().iter(),
+          &state.nicknames,
+          &config,
+        ));
         _typing = Some(Typing::start(ctx.http.clone(), msg.channel_id));
       }
     }
@@ -169,7 +178,7 @@ impl EventHandler for MarcoBot {
         state.messages.push_back(message::Message {
           user,
           content: resp.clone(),
-        });
+        }, true);
       }
       let mut resp = CreateMessage::default()
         .content(resp);

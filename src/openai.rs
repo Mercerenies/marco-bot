@@ -34,23 +34,35 @@ pub const NAMED_PREFIX_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(.{1
 
 pub const QUOTES_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"^["“]|["”]$"#).unwrap());
 
-pub fn chat_completion<'a, I>(
+pub fn chat_completion<'a, 'b, I1, I2>(
   personality: &FullPersonality,
-  chat_history: I,
+  chat_history: I1,
+  referred_chat_history: I2,
   mapping: &NicknameMap,
   config: &DeveloperPromptConfig,
 ) -> CreateChatCompletionRequest
-where I: IntoIterator<Item = &'a Message> {
+where I1: IntoIterator<Item = &'a Message>,
+      I2: IntoIterator<Item = &'b Message> {
   let personality_tagline = personality.tagline();
   let recent_messages = chat_history
     .into_iter()
     .map(|message| format!("{}: {}", message_user_name(&message.user, mapping), message.content))
     .join("\n");
+  let recent_referred_messages = referred_chat_history
+    .into_iter()
+    .map(|message| format!("{}: {}", message_user_name(&message.user, mapping), message.content))
+    .join("\n");
   let user_prompt = format!("\
     Your role: {personality_tagline}\n\
+    \n\
     Recent Chat History:\n\
     ```\n\
     {recent_messages}\n\
+    ```\
+    \n\
+    Recent Messages that Refer to You:\n\
+    ```\n\
+    {recent_referred_messages}\n\
     ```\
   ");
   CreateChatCompletionRequestArgs::default()
