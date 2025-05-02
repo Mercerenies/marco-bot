@@ -21,5 +21,6 @@ pub async fn generate_personality(client: &Client<OpenAIConfig>) -> anyhow::Resu
     let tags = PersonalityTag::VARIANTS.choose_multiple(&mut random, tags_count).copied().collect();
     PersonalityTemplate { base_personality, tags }
   };
+  println!("Generating personality starting with template: {}", template);
   flesh_out_personality(&client, &template).await
 }

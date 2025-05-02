@@ -12,6 +12,7 @@ use regex::Regex;
 use itertools::Itertools;
 
 use std::sync::LazyLock;
+use std::fmt::{self, Display};
 
 pub const NAME_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"Name: (.*)").unwrap());
 
@@ -61,6 +62,12 @@ impl PersonalityTemplate {
       Synopsis: (Short, one-sentence)\n\
       ```\
     ")
+  }
+}
+
+impl Display for PersonalityTemplate {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    write!(f, "{} ({})", self.base_personality.long_name(), self.tags.iter().join(", "))
   }
 }
 

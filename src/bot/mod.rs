@@ -12,8 +12,9 @@ use async_openai::config::OpenAIConfig;
 use serenity::prelude::*;
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
-use serenity::model::id::UserId;
+use serenity::model::id::{UserId, GuildId};
 use serenity::model::channel::Channel;
+use serenity::model::user::User;
 use serenity::http::Typing;
 use serenity::builder::{CreateEmbed, CreateEmbedFooter, CreateMessage};
 use serenity::gateway::ActivityData;
@@ -120,7 +121,7 @@ impl EventHandler for MarcoBot {
             return;
           }
         };
-        let name = new_personality.name.to_owned();
+        let name = new_personality.name.trim().to_owned();
         {
           let mut state = self.lock_state();
           state.set_personality(new_personality);
@@ -144,8 +145,9 @@ impl EventHandler for MarcoBot {
     let mut _typing = None; // unused variable reason: Semantically-significant drop glue
     {
       let mentioned = is_bot_mentioned(bot_user_id, &msg);
+      let nick = get_nick(&ctx, &msg.author, msg.guild_id).await;
       let mut state = self.lock_state();
-      state.nicknames.insert(msg.author.id, msg.author.name.clone());
+      state.nicknames.insert(msg.author.id, nick);
       let message = message::Message {
         user: message::MessageUser::DiscordUser { user_id: msg.author.id },
         content: msg.content.to_owned(),
@@ -227,4 +229,9 @@ async fn send_help_message(ctx: &Context, msg: &Message) {
   if let Err(why) = msg.channel_id.send_message(&ctx.http, message).await {
     eprintln!("Error sending help message: {:?}", why);
   }
+}
+
+async fn get_nick(ctx: &Context, user: &User, guild: Option<GuildId>) -> String {
+  let Some(guild) = guild else { return user.name.clone() };
+  user.nick_in(ctx, guild).await.unwrap_or_else(|| user.name.clone())
 }
