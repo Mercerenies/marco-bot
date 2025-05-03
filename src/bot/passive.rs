@@ -8,7 +8,7 @@ use serenity::prelude::Context;
 
 const REROLL_TASK_MINUTES: u32 =  15;
 
-const MINS_SINCE_LAST_MSG_TO_REROLL: i64 = 10;
+const MINS_SINCE_LAST_MSG_TO_REROLL: i64 = 40;
 
 /// Passive re-roll job for Marco to generate new personalities.
 pub fn schedule_reroll_task(bot: MarcoBot, ctx: Context) {
