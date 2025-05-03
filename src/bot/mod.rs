@@ -143,6 +143,7 @@ impl EventHandler for MarcoBot {
         {
           let mut state = self.lock_state();
           state.set_personality(new_personality);
+          state.refresh_activity(&ctx);
         }
         let resp = CreateMessage::default()
           .content(format!("Introducing {name}!"))
