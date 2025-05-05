@@ -2,7 +2,8 @@
 use super::message::{self, MessageHistory};
 use super::passive;
 use super::nicknames::NicknameMap;
-use crate::personality::{FullPersonality, generate_personality};
+use super::commands::{BotCommand, compile_default_commands};
+use crate::personality::FullPersonality;
 use crate::openai;
 
 use async_openai::Client;
@@ -14,12 +15,13 @@ use serenity::model::id::{UserId, GuildId};
 use serenity::model::channel::Channel;
 use serenity::model::user::User;
 use serenity::http::Typing;
-use serenity::builder::{CreateEmbed, CreateEmbedFooter, CreateMessage};
+use serenity::builder::CreateMessage;
 use serenity::gateway::ActivityData;
 use async_trait::async_trait;
 use regex::Regex;
 
 use std::sync::{Arc, Mutex, MutexGuard, LazyLock};
+use std::collections::HashMap;
 
 const BOT_NAME_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i:\bmarco\b)").unwrap());
 
@@ -36,6 +38,7 @@ pub struct MarcoBot {
 struct MarcoBotImpl {
   state: Mutex<MarcoBotState>,
   client: Client<OpenAIConfig>,
+  commands: HashMap<String, Box<dyn BotCommand>>,
   #[expect(dead_code)] // Currently, config is not used :)
   config: MarcoBotConfig,
 }
@@ -53,7 +56,7 @@ pub struct MarcoBotState {
   pub last_reference: Option<chrono::DateTime<chrono::Utc>>,
 }
 
-fn gateway_intents() -> GatewayIntents {
+pub fn gateway_intents() -> GatewayIntents {
   GatewayIntents::all()
 }
 
@@ -64,6 +67,7 @@ impl MarcoBot {
     let inner = MarcoBotImpl {
       state: Mutex::new(MarcoBotState::new()),
       client: Client::new(),
+      commands: compile_default_commands(),
       config,
     };
     Self { inner: Arc::new(inner) }
@@ -135,29 +139,10 @@ impl EventHandler for MarcoBot {
 
     // Special command checks
     if !msg.author.bot {
-      if msg.content == "!marco help" {
-        send_help_message(&ctx, &msg).await;
-        return;
-      }
-
-      if msg.content == "!marco reroll" {
-        let new_personality = match generate_personality(self.client()).await {
-          Ok(p) => p,
-          Err(e) => {
-            println!("Error from OpenAI: {:?}", e);
-            return;
-          }
-        };
-        let name = new_personality.name.trim().to_owned();
-        {
-          let mut state = self.lock_state();
-          state.set_personality(new_personality);
-        }
-        let resp = CreateMessage::default()
-          .content(format!("Introducing {name}!"))
-          .reference_message(&msg);
-        if let Err(why) = msg.channel_id.send_message(&ctx.http, resp).await {
-          println!("Error sending reroll message: {:?}", why);
+      if let Some(command) = self.inner.commands.get(&msg.content) {
+        let res = command.run_command(self, &ctx, &msg).await;
+        if let Err(err) = res {
+          println!("Error while running {:?} command: {:?}", command, err);
         }
         return;
       }
@@ -242,23 +227,6 @@ async fn is_dm(ctx: &Context, msg: &Message) -> bool {
   match msg.channel(&ctx).await {
     Ok(Channel::Private(_)) => true,
     _ => false,
-  }
-}
-
-async fn send_help_message(ctx: &Context, msg: &Message) {
-  let help_embed = CreateEmbed::default()
-    .title("Marco Bot Help")
-    .description("Marco is a Discord bot written by Mercerenies. Check the link above for more details")
-    .field("!marco help", "Displays this help message.", false)
-    .field("!marco reroll", "Roll a new personality for Marco.", false)
-    .url("https://github.com/Mercerenies/marco-bot")
-    .footer(CreateEmbedFooter::new("Thank you for using Marco Bot!"));
-
-  let message = CreateMessage::default()
-    .embed(help_embed);
-
-  if let Err(why) = msg.channel_id.send_message(&ctx.http, message).await {
-    eprintln!("Error sending help message: {:?}", why);
   }
 }
 
