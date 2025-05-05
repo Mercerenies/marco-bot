@@ -24,7 +24,7 @@ pub struct Message {
 pub enum MessageUser {
   /// A normal Discord user. This category also includes bots other
   /// than this one.
-  DiscordUser { user_id: UserId },
+  DiscordUser { user_id: UserId, user_proper_name: String, user_nickname: String },
   /// This bot, as a message sender.
   Marco { identity: String },
 }

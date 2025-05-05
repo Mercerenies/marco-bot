@@ -1,7 +1,6 @@
 
 //! OpenAI helpers.
 
-use crate::bot::nicknames::NicknameMap;
 use crate::bot::message::{Message, MessageUser};
 use crate::personality::FullPersonality;
 
@@ -79,7 +78,6 @@ pub fn chat_completion<'a, 'b, I1, I2>(
   personality: &FullPersonality,
   chat_history: I1,
   referred_chat_history: I2,
-  mapping: &NicknameMap,
   config: &DeveloperPromptConfig,
 ) -> OpenAiResponder
 where I1: IntoIterator<Item = &'a Message>,
@@ -87,11 +85,11 @@ where I1: IntoIterator<Item = &'a Message>,
   let personality_tagline = personality.tagline();
   let recent_messages = chat_history
     .into_iter()
-    .map(|message| format!("{}: {}", message_user_name(&message.user, mapping), message.content))
+    .map(|message| format!("{}: {}", message_user_name(&message.user), message.content))
     .join("\n");
   let recent_referred_messages = referred_chat_history
     .into_iter()
-    .map(|message| format!("{}: {}", message_user_name(&message.user, mapping), message.content))
+    .map(|message| format!("{}: {}", message_user_name(&message.user), message.content))
     .join("\n");
   let user_prompt = format!("\
     Your role: {personality_tagline}\n\
@@ -125,11 +123,17 @@ fn get_developer_prompt(#[expect(unused_variables)] config: &DeveloperPromptConf
   String::from(BASE_DEVELOPER_PROMPT)
 }
 
-fn message_user_name(user: &MessageUser, mapping: &NicknameMap) -> String {
+fn message_user_name(user: &MessageUser) -> String {
   match user {
-    MessageUser::DiscordUser { user_id } =>
-      mapping.get(&user_id).unwrap_or("User").to_owned(),
-    MessageUser::Marco { identity: _ } =>
-      String::from("You"),
+    MessageUser::DiscordUser { user_id: _, user_proper_name, user_nickname } => {
+      if user_nickname == user_proper_name {
+        format!("User {}", user_nickname)
+      } else {
+        format!("User {} ({})", user_nickname, user_proper_name)
+      }
+    }
+    MessageUser::Marco { identity: _ } => {
+      String::from("You")
+    }
   }
 }

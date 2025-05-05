@@ -1,4 +1,7 @@
 
+// Note: Nickname map is no longer used, as we simply grab the
+// nickname from the Discord API directly.
+
 use serenity::model::id::UserId;
 
 use std::collections::HashMap;

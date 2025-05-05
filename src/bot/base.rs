@@ -1,7 +1,6 @@
 
 use super::message::{self, MessageHistory};
 use super::passive;
-use super::nicknames::NicknameMap;
 use super::commands::{BotCommand, compile_default_commands};
 use crate::personality::FullPersonality;
 use crate::openai;
@@ -51,7 +50,6 @@ pub struct MarcoBotConfig {}
 pub struct MarcoBotState {
   pub personality: FullPersonality,
   pub messages: MessageHistory,
-  pub nicknames: NicknameMap,
   pub last_reference: Option<chrono::DateTime<chrono::Utc>>,
 }
 
@@ -91,7 +89,6 @@ impl MarcoBotState {
   pub fn new() -> Self {
     Self {
       messages: MessageHistory::new(Self::MESSAGE_REFER_HISTORY_CAPACITY, Self::MESSAGE_HISTORY_CAPACITY),
-      nicknames: NicknameMap::new(),
       personality: FullPersonality::default(),
       last_reference: None,
     }
@@ -157,9 +154,12 @@ impl EventHandler for MarcoBot {
       let mentioned = is_bot_mentioned(bot_user_id, &msg);
       let nick = get_nick(&ctx, &msg.author, msg.guild_id).await;
       let mut state = self.lock_state();
-      state.nicknames.insert(msg.author.id, nick);
       let message = message::Message {
-        user: message::MessageUser::DiscordUser { user_id: msg.author.id },
+        user: message::MessageUser::DiscordUser {
+          user_id: msg.author.id,
+          user_proper_name: msg.author.name.clone(),
+          user_nickname: nick,
+        },
         content: msg.content.to_owned(),
       };
       state.messages.push_back(message, mentioned);
@@ -171,7 +171,6 @@ impl EventHandler for MarcoBot {
             &state.personality,
             state.messages.messages().iter(),
             state.messages.referred_messages().iter(),
-            &state.nicknames,
             &config,
           ).with_typing_notification(&ctx, msg.channel_id),
         );
