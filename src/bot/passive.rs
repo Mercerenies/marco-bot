@@ -35,18 +35,14 @@ async fn do_passive_reroll(bot: MarcoBot, ctx: Context) -> anyhow::Result<()> {
   let new_personality = generate_personality(bot.client()).await?;
   let mut state = bot.lock_state();
   state.set_personality(new_personality);
-  state.last_reference = None;
-  state.spoken_to_latest_personality = false;
   state.refresh_activity(&ctx);
   Ok(())
 }
 
 fn should_reroll(bot: &MarcoBot) -> bool {
   let state = bot.lock_state();
-  if !state.spoken_to_latest_personality {
-    return false;
-  }
   let Some(last_reference) = state.last_reference else {
+    // We have never spoken to this personality. Do NOT reroll it.
     return false;
   };
   let now = chrono::Utc::now();

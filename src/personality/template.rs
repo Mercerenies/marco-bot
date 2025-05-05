@@ -42,7 +42,7 @@ pub struct PersonalityTemplate {
 
 impl FullPersonality {
   pub fn tagline(&self) -> String {
-    format!("{} - {}", self.name, self.synopsis)
+    format!("{} (\"Marco\" for short) - {}", self.name, self.synopsis)
   }
 }
 
