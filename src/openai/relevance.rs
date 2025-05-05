@@ -56,7 +56,7 @@ pub fn relevance_completion(
   let personality_name = &personality.name;
   let latest_chat_message = latest_chat_message.replace('\n', " ");
   let user_prompt = format!("\
-    Your character: {personality_name}\n\
+    Your character: {personality_name} (\"Marco\" for short)\n\
     Latest chat message: `{latest_chat_message}`\n\
     \n\
     Does the above chat message directly refer to your \
