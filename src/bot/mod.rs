@@ -64,6 +64,8 @@ pub fn gateway_intents() -> GatewayIntents {
 }
 
 impl MarcoBot {
+  /// Creates a new instance of this Discord bot, with the given
+  /// configuration.
   pub fn new(config: MarcoBotConfig) -> Self {
     let inner = MarcoBotImpl {
       state: Mutex::new(MarcoBotState::new()),
@@ -77,6 +79,9 @@ impl MarcoBot {
     &self.inner.client
   }
 
+  /// Locks the mutex for the bot's state and returns the guard.
+  ///
+  /// This method will panic if the mutex is poisoned.
   pub fn lock_state(&self) -> MutexGuard<MarcoBotState> {
     self.inner.state.lock().unwrap()
   }
