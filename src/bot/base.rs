@@ -14,7 +14,6 @@ use serenity::model::gateway::Ready;
 use serenity::model::id::{UserId, GuildId};
 use serenity::model::channel::Channel;
 use serenity::model::user::User;
-use serenity::http::Typing;
 use serenity::builder::CreateMessage;
 use serenity::gateway::ActivityData;
 use async_trait::async_trait;
@@ -133,7 +132,7 @@ impl EventHandler for MarcoBot {
   async fn message(&self, ctx: Context, msg: Message) {
     let bot_user_id = ctx.cache.current_user().id;
     if msg.author.id == bot_user_id {
-      // Ignore all messages from the bot
+      // Ignore all messages from the bot itself
       return;
     }
 
@@ -153,8 +152,7 @@ impl EventHandler for MarcoBot {
       return;
     }
 
-    let mut chat_completion = None;
-    let mut _typing = None; // unused variable reason: Semantically-significant drop glue
+    let mut responder = None;
     {
       let mentioned = is_bot_mentioned(bot_user_id, &msg);
       let nick = get_nick(&ctx, &msg.author, msg.guild_id).await;
@@ -168,19 +166,20 @@ impl EventHandler for MarcoBot {
       if mentioned {
         let config = openai::DeveloperPromptConfig {};
         state.mark_latest_reference(chrono::Utc::now());
-        chat_completion = Some(openai::chat_completion(
-          &state.personality,
-          state.messages.messages().iter(),
-          state.messages.referred_messages().iter(),
-          &state.nicknames,
-          &config,
-        ));
-        _typing = Some(Typing::start(ctx.http.clone(), msg.channel_id));
+        responder = Some(
+          openai::chat_completion(
+            &state.personality,
+            state.messages.messages().iter(),
+            state.messages.referred_messages().iter(),
+            &state.nicknames,
+            &config,
+          ).with_typing_notification(&ctx, msg.channel_id),
+        );
       }
     }
-    // Note: Drop mutex here so we don't hold it over an await boundary.
-    if let Some(chat_completion) = chat_completion {
-      let resp = match openai::chat(self.client(), chat_completion).await {
+    // Note: Drop mutex here so we don't hold it over an OpenAI await boundary.
+    if let Some(responder) = responder {
+      let resp = match responder.chat(self.client()).await {
         Ok(resp) => resp,
         Err(e) => {
           println!("Error from OpenAI: {:?}", e);
