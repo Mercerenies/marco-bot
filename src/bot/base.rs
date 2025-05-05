@@ -3,7 +3,8 @@ use super::message::{self, MessageHistory};
 use super::passive;
 use super::commands::{BotCommand, compile_default_commands};
 use crate::personality::FullPersonality;
-use crate::openai;
+use crate::openai::DeveloperPromptConfig;
+use crate::openai::responder::chat_completion;
 
 use async_openai::Client;
 use async_openai::config::OpenAIConfig;
@@ -164,10 +165,10 @@ impl EventHandler for MarcoBot {
       };
       state.messages.push_back(message, mentioned);
       if mentioned {
-        let config = openai::DeveloperPromptConfig {};
+        let config = DeveloperPromptConfig {};
         state.mark_latest_reference(chrono::Utc::now());
         responder = Some(
-          openai::chat_completion(
+          chat_completion(
             &state.personality,
             state.messages.messages().iter(),
             state.messages.referred_messages().iter(),
