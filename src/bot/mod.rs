@@ -54,9 +54,6 @@ pub struct MarcoBotState {
   pub messages: MessageHistory,
   pub nicknames: NicknameMap,
   pub last_reference: Option<chrono::DateTime<chrono::Utc>>,
-  /// Whether or not any user has acknowledged this personality. If
-  /// this is false, then a new personality will not passively roll.
-  pub spoken_to_latest_personality: bool, // TODO This field is equivalent to self.last_reference.is_some() I think
 }
 
 pub fn gateway_intents() -> GatewayIntents {
@@ -97,7 +94,6 @@ impl MarcoBotState {
       nicknames: NicknameMap::new(),
       personality: FullPersonality::default(),
       last_reference: None,
-      spoken_to_latest_personality: false,
     }
   }
 
@@ -109,8 +105,19 @@ impl MarcoBotState {
   pub fn set_personality(&mut self, personality: FullPersonality) {
     println!("Setting Personality: {}", personality.tagline());
     self.last_reference = None;
-    self.spoken_to_latest_personality = false;
     self.personality = personality;
+  }
+
+  pub fn mark_latest_reference(&mut self, date: chrono::DateTime<chrono::Utc>) {
+    self.last_reference = Some(date);
+  }
+
+  pub fn last_reference(&self) -> Option<&chrono::DateTime<chrono::Utc>> {
+    self.last_reference.as_ref()
+  }
+
+  pub fn spoken_to_latest_personality(&self) -> bool {
+    self.last_reference.is_some()
   }
 }
 
@@ -178,8 +185,7 @@ impl EventHandler for MarcoBot {
       state.messages.push_back(message, mentioned);
       if mentioned {
         let config = openai::DeveloperPromptConfig {};
-        state.spoken_to_latest_personality = true;
-        state.last_reference = Some(chrono::Utc::now());
+        state.mark_latest_reference(chrono::Utc::now());
         chat_completion = Some(openai::chat_completion(
           &state.personality,
           state.messages.messages().iter(),
