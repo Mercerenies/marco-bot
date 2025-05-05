@@ -1,6 +1,7 @@
 
 //! OpenAI helpers.
 
+pub mod relevance;
 pub mod responder;
 
 // Currently unused

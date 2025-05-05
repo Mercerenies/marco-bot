@@ -5,6 +5,7 @@ use super::commands::{BotCommand, compile_default_commands};
 use crate::personality::FullPersonality;
 use crate::openai::DeveloperPromptConfig;
 use crate::openai::responder::chat_completion;
+use crate::openai::relevance::relevance_completion;
 
 use async_openai::Client;
 use async_openai::config::OpenAIConfig;
@@ -17,12 +18,9 @@ use serenity::model::user::User;
 use serenity::builder::CreateMessage;
 use serenity::gateway::ActivityData;
 use async_trait::async_trait;
-use regex::Regex;
 
-use std::sync::{Arc, Mutex, MutexGuard, LazyLock};
+use std::sync::{Arc, Mutex, MutexGuard};
 use std::collections::HashMap;
-
-const BOT_NAME_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i:\bmarco\b)").unwrap());
 
 /// An instance of this Discord bot.
 ///
@@ -80,6 +78,28 @@ impl MarcoBot {
   /// This method will panic if the mutex is poisoned.
   pub fn lock_state(&self) -> MutexGuard<MarcoBotState> {
     self.inner.state.lock().unwrap()
+  }
+
+  async fn is_message_relevant(
+    &self,
+    bot_user_id: UserId,
+    msg: &Message,
+  ) -> bool {
+    if msg.mentions.iter().any(|mention| mention.id == bot_user_id) {
+      return true;
+    }
+    let relevance_checker = {
+      let state = self.lock_state();
+      let config = DeveloperPromptConfig {};
+      relevance_completion(&state.personality, &msg.content, &config)
+    };
+    match relevance_checker.ask_question(self.client()).await {
+      Ok(response) => response,
+      Err(err) => {
+        println!("Error occurred while checking message relevance: {:?}", err);
+        false
+      }
+    }
   }
 }
 
@@ -152,7 +172,7 @@ impl EventHandler for MarcoBot {
 
     let mut responder = None;
     {
-      let mentioned = is_bot_mentioned(bot_user_id, &msg);
+      let relevant = self.is_message_relevant(bot_user_id, &msg).await;
       let nick = get_nick(&ctx, &msg.author, msg.guild_id).await;
       let mut state = self.lock_state();
       let message = message::Message {
@@ -163,8 +183,8 @@ impl EventHandler for MarcoBot {
         },
         content: msg.content.to_owned(),
       };
-      state.messages.push_back(message, mentioned);
-      if mentioned {
+      state.messages.push_back(message, relevant);
+      if relevant {
         let config = DeveloperPromptConfig {};
         state.mark_latest_reference(chrono::Utc::now());
         responder = Some(
@@ -215,11 +235,6 @@ impl EventHandler for MarcoBot {
     }
     passive::schedule_reroll_task(self.clone(), ctx);
   }
-}
-
-fn is_bot_mentioned(bot_user_id: UserId, msg: &Message) -> bool {
-  BOT_NAME_RE.is_match(&msg.content) ||
-    msg.mentions.iter().any(|mention| mention.id == bot_user_id)
 }
 
 async fn is_dm(ctx: &Context, msg: &Message) -> bool {
