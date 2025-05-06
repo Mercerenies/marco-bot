@@ -1,8 +1,8 @@
 
-//! Helpers for determining whether a message is relevant.
+//! Helpers for determining whether the bot should react with an emoji
+//! to the message.
 
 use super::{DeveloperPromptConfig, OPENAI_MODEL};
-use crate::personality::FullPersonality;
 
 use async_openai::Client;
 use async_openai::types::{CreateChatCompletionRequest, CreateChatCompletionRequestArgs,
@@ -11,56 +11,47 @@ use async_openai::config::OpenAIConfig;
 use async_openai::error::OpenAIError;
 
 const DEVELOPER_PROMPT: &str = "\
-  You are Marco, a discord bot. You are roleplaying in a Discord server. \
-  The user will feed you a chat message and ask you a question. Answer with \
-  a simple \"Yes\" or \"No\" and no other output.\
+  You are Marco, a discord bot. You are roleplaying in a Discord server.
+
+  The user will feed you a chat message. If you feel strongly about the message, \
+  reply with a single emoji. Otherwise, simply say \"No reaction\".
 ";
 
 /// Structure holding the parameters for an OpenAI question as to
-/// whether or not the bot should respond.
+/// whether or not the bot should react with an emoji.
 ///
 /// Like [`super::responder::OpenAiResponder`], this structure splits
 /// the act of asking OpenAI for a response into two parts, to
 /// minimize the amount of time that the bot's state mutex must be
 /// held.
 #[derive(Debug)]
-pub struct OpenAiRelevanceChecker {
+pub struct OpenAiReactionChecker {
   completion_request: CreateChatCompletionRequest,
 }
 
-impl OpenAiRelevanceChecker {
-  pub async fn ask_question(self, client: &Client<OpenAIConfig>) -> Result<bool, OpenAIError> {
-    println!("Chatting with OpenAI for relevance question: {:?}", &self.completion_request);
+impl OpenAiReactionChecker {
+  pub async fn ask_question(self, client: &Client<OpenAIConfig>) -> Result<Option<String>, OpenAIError> {
+    println!("Chatting with OpenAI for emoji reaction: {:?}", &self.completion_request);
     let response = client
       .chat()
       .create(self.completion_request)
       .await?;
     let text = response.choices.first().unwrap().message.content.to_owned().unwrap();
-    if text.to_lowercase().contains("yes") {
-      Ok(true)
-    } else if text.to_lowercase().contains("no") {
-      Ok(false)
-    } else if text.to_lowercase().contains("y") {
-      Ok(true)
+    if text.to_lowercase().contains("reaction") {
+      Ok(None)
     } else {
-      Ok(false)
+      Ok(Some(text))
     }
   }
 }
 
-pub fn relevance_completion(
-  personality: &FullPersonality,
+pub fn emoji_reaction_completion(
   latest_chat_message: &str,
   _config: &DeveloperPromptConfig, // Currently unused
-) -> OpenAiRelevanceChecker {
-  let personality_name = &personality.name;
+) -> OpenAiReactionChecker {
   let latest_chat_message = latest_chat_message.replace('\n', " ");
   let user_prompt = format!("\
-    Your character: {personality_name} (\"Marco\" for short)\n\
-    Latest chat message: `{latest_chat_message}`\n\
-    \n\
-    Does the above chat message directly refer to your \
-    character or warrant a response from him/her?\
+    Latest chat message: `{latest_chat_message}`\
   ");
   let request = CreateChatCompletionRequestArgs::default()
     .model(OPENAI_MODEL)
@@ -71,7 +62,7 @@ pub fn relevance_completion(
     ])
     .build()
     .unwrap();
-  OpenAiRelevanceChecker {
+  OpenAiReactionChecker {
     completion_request: request,
   }
 }

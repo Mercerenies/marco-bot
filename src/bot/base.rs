@@ -6,14 +6,15 @@ use crate::personality::FullPersonality;
 use crate::openai::DeveloperPromptConfig;
 use crate::openai::responder::chat_completion;
 use crate::openai::relevance::relevance_completion;
+use crate::openai::reaction::emoji_reaction_completion;
 
 use async_openai::Client;
 use async_openai::config::OpenAIConfig;
 use serenity::prelude::*;
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
-use serenity::model::id::{UserId, GuildId};
-use serenity::model::channel::Channel;
+use serenity::model::id::{UserId, GuildId, ChannelId, MessageId};
+use serenity::model::channel::{Channel, ReactionType};
 use serenity::model::user::User;
 use serenity::builder::CreateMessage;
 use serenity::gateway::ActivityData;
@@ -170,6 +171,10 @@ impl EventHandler for MarcoBot {
       return;
     }
 
+    // Spawn up an independent task to see if the bot should react
+    // (via Discord emoji) to the message.
+    tokio::spawn(do_reaction_flow(self.clone(), ctx.clone(), msg.content.to_owned(), msg.channel_id, msg.id));
+
     let mut responder = None;
     {
       let relevant = self.is_message_relevant(bot_user_id, &msg).await;
@@ -247,4 +252,33 @@ async fn is_dm(ctx: &Context, msg: &Message) -> bool {
 async fn get_nick(ctx: &Context, user: &User, guild: Option<GuildId>) -> String {
   let Some(guild) = guild else { return user.name.clone() };
   user.nick_in(ctx, guild).await.unwrap_or_else(|| user.name.clone())
+}
+
+async fn do_reaction_flow(
+  bot: MarcoBot,
+  ctx: Context,
+  message_content: String,
+  channel_id: ChannelId,
+  message_id: MessageId,
+) {
+  async fn do_reaction_flow_impl(
+    bot: MarcoBot,
+    ctx: Context,
+    message_content: String,
+    channel_id: ChannelId,
+    message_id: MessageId,
+  ) -> anyhow::Result<()> {
+    let reaction_checker = emoji_reaction_completion(&message_content, &DeveloperPromptConfig {});
+    let emoji_response = reaction_checker.ask_question(bot.client()).await?;
+    let Some(emoji_response) = emoji_response else {
+      return Ok(()); // Nothing to react with.
+    };
+    ctx.http
+      .create_reaction(channel_id, message_id, &ReactionType::Unicode(emoji_response))
+      .await?;
+    Ok(())
+  }
+  if let Err(err) = do_reaction_flow_impl(bot, ctx, message_content, channel_id, message_id).await {
+    println!("Error while doing reaction flow: {:?}", err);
+  }
 }

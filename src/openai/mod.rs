@@ -1,6 +1,7 @@
 
 //! OpenAI helpers.
 
+pub mod reaction;
 pub mod relevance;
 pub mod responder;
 
