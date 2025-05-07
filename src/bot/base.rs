@@ -175,6 +175,11 @@ impl EventHandler for MarcoBot {
     // (via Discord emoji) to the message.
     tokio::spawn(do_reaction_flow(self.clone(), ctx.clone(), msg.content.to_owned(), msg.channel_id, msg.id));
 
+    if is_thread(&ctx, &msg).await {
+      // Ignore thread messages (except for emoji reacts)
+      return;
+    }
+
     let mut responder = None;
     {
       let relevant = self.is_message_relevant(bot_user_id, &msg).await;
@@ -245,6 +250,13 @@ impl EventHandler for MarcoBot {
 async fn is_dm(ctx: &Context, msg: &Message) -> bool {
   match msg.channel(&ctx).await {
     Ok(Channel::Private(_)) => true,
+    _ => false,
+  }
+}
+
+async fn is_thread(ctx: &Context, msg: &Message) -> bool {
+  match msg.channel(&ctx).await {
+    Ok(Channel::Guild(ch)) => ch.thread_metadata.is_some(),
     _ => false,
   }
 }
