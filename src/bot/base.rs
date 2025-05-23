@@ -130,7 +130,6 @@ impl MarcoBotState {
     self.personality_id = self.personality_id.wrapping_add(1);
     self.personality = personality;
     self.messages.referred_messages_mut().clear();
-    self.messages.messages_mut().clear();
   }
 
   pub fn mark_latest_reference(&mut self, date: chrono::DateTime<chrono::Utc>) {
