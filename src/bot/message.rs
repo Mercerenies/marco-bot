@@ -26,7 +26,7 @@ pub enum MessageUser {
   /// than this one.
   DiscordUser { user_id: UserId, user_proper_name: String, user_nickname: String },
   /// This bot, as a message sender.
-  Marco { identity: String },
+  Marco { identity_id: usize, identity: String },
 }
 
 impl MessageHistory {
@@ -50,5 +50,13 @@ impl MessageHistory {
 
   pub fn referred_messages(&self) -> &CapacityDeque<Message> {
     &self.recent_referred_messages
+  }
+
+  pub fn messages_mut(&mut self) -> &mut CapacityDeque<Message> {
+    &mut self.recent_messages
+  }
+
+  pub fn referred_messages_mut(&mut self) -> &mut CapacityDeque<Message> {
+    &mut self.recent_referred_messages
   }
 }

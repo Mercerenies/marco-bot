@@ -48,6 +48,8 @@ pub struct MarcoBotConfig {}
 /// An instance of this Discord bot's current state.
 #[derive(Debug)]
 pub struct MarcoBotState {
+  /// Incremented each time Marco generates a new personality.
+  pub personality_id: usize,
   pub personality: FullPersonality,
   pub messages: MessageHistory,
   pub last_reference: Option<chrono::DateTime<chrono::Utc>>,
@@ -111,6 +113,7 @@ impl MarcoBotState {
   pub fn new() -> Self {
     Self {
       messages: MessageHistory::new(Self::MESSAGE_REFER_HISTORY_CAPACITY, Self::MESSAGE_HISTORY_CAPACITY),
+      personality_id: 0,
       personality: FullPersonality::default(),
       last_reference: None,
     }
@@ -124,7 +127,10 @@ impl MarcoBotState {
   pub fn set_personality(&mut self, personality: FullPersonality) {
     println!("Setting Personality: {}", personality.tagline());
     self.last_reference = None;
+    self.personality_id = self.personality_id.wrapping_add(1);
     self.personality = personality;
+    self.messages.referred_messages_mut().clear();
+    self.messages.messages_mut().clear();
   }
 
   pub fn mark_latest_reference(&mut self, date: chrono::DateTime<chrono::Utc>) {
@@ -199,6 +205,7 @@ impl EventHandler for MarcoBot {
         state.mark_latest_reference(chrono::Utc::now());
         responder = Some(
           chat_completion(
+            state.personality_id,
             &state.personality,
             state.messages.messages().iter(),
             state.messages.referred_messages().iter(),
@@ -218,7 +225,10 @@ impl EventHandler for MarcoBot {
       };
       {
         let mut state = self.lock_state();
-        let user = message::MessageUser::Marco { identity: state.personality.name.clone() };
+        let user = message::MessageUser::Marco {
+          identity_id: state.personality_id,
+          identity: state.personality.name.clone(),
+        };
         state.messages.push_back(message::Message {
           user,
           content: resp.clone(),

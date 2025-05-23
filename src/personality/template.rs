@@ -16,7 +16,7 @@ use std::fmt::{self, Display};
 
 pub const NAME_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"Name: (.*)").unwrap());
 
-pub const SYNOPSIS_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"Synopsis: (.*)").unwrap());
+pub const SYNOPSIS_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"Summary: (.*)").unwrap());
 
 pub const BASE_DEVELOPER_PROMPT: &str = "\
   You are helping to develop characters for a roleplay session. The user will provide you with a \
@@ -31,6 +31,7 @@ pub const BASE_DEVELOPER_PROMPT: &str = "\
 #[derive(Debug, Clone)]
 pub struct FullPersonality {
   pub name: String,
+  pub class: String,
   pub synopsis: String,
 }
 
@@ -42,7 +43,7 @@ pub struct PersonalityTemplate {
 
 impl FullPersonality {
   pub fn tagline(&self) -> String {
-    format!("{} (\"Marco\" for short) - {}", self.name, self.synopsis)
+    format!("{} (\"Marco\" for short) - [Class: {}] {}", self.name, self.class, self.synopsis)
   }
 }
 
@@ -59,7 +60,8 @@ impl PersonalityTemplate {
       Output Format:\n\
       ```\n\
       Name: (name)\n\
-      Synopsis: (Short, one-sentence)\n\
+      Description: (Short, one-sentence)\n\
+      Summary: (At most six words)\n\
       ```\
     ")
   }
@@ -75,6 +77,7 @@ impl Default for FullPersonality {
   fn default() -> Self {
     Self {
       name: String::from("Marco"),
+      class: String::from("AI"),
       synopsis: String::from("A helpful AI assistant"),
     }
   }
@@ -102,5 +105,6 @@ pub async fn flesh_out_personality(
   let synopsis = SYNOPSIS_RE.captures(&text).and_then(|c| c.get(1))
     .ok_or_else(|| anyhow::anyhow!("Failed to parse synopsis from response"))?
     .as_str().into();
-  Ok(FullPersonality { name, synopsis })
+  let class = template.base_personality.long_name().to_owned();
+  Ok(FullPersonality { name, class, synopsis })
 }

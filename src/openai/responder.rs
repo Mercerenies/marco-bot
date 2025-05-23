@@ -61,6 +61,7 @@ impl OpenAiResponder {
 }
 
 pub fn chat_completion<'a, 'b, I1, I2>(
+  marco_id: usize,
   personality: &FullPersonality,
   chat_history: I1,
   referred_chat_history: I2,
@@ -71,11 +72,11 @@ where I1: IntoIterator<Item = &'a Message>,
   let personality_tagline = personality.tagline();
   let recent_messages = chat_history
     .into_iter()
-    .map(|message| format!("{}: {}", message_user_name(&message.user), message.content))
+    .map(|message| format!("{}: {}", message_user_name(marco_id, &message.user), message.content))
     .join("\n");
   let recent_referred_messages = referred_chat_history
     .into_iter()
-    .map(|message| format!("{}: {}", message_user_name(&message.user), message.content))
+    .map(|message| format!("{}: {}", message_user_name(marco_id, &message.user), message.content))
     .join("\n");
   let user_prompt = format!("\
     Your role: {personality_tagline}\n\
@@ -109,7 +110,7 @@ fn get_developer_prompt(#[expect(unused_variables)] config: &DeveloperPromptConf
   String::from(BASE_DEVELOPER_PROMPT)
 }
 
-fn message_user_name(user: &MessageUser) -> String {
+fn message_user_name(marco_id: usize, user: &MessageUser) -> String {
   match user {
     MessageUser::DiscordUser { user_id: _, user_proper_name, user_nickname } => {
       if user_nickname == user_proper_name {
@@ -118,8 +119,14 @@ fn message_user_name(user: &MessageUser) -> String {
         format!("User {} ({})", user_nickname, user_proper_name)
       }
     }
-    MessageUser::Marco { identity: _ } => {
-      String::from("You")
+    MessageUser::Marco { identity_id, identity } => {
+      if *identity_id == marco_id {
+        // This is his current personality
+        String::from("You")
+      } else {
+        // This is a past personality
+        identity.to_owned()
+      }
     }
   }
 }

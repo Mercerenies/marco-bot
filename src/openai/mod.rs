@@ -14,8 +14,10 @@ pub const BASE_DEVELOPER_PROMPT: &str = "\
   1. The user will feed you a chat history and a role to play.\n\
   2. Respond in-character with a short reply. Your response should be \
      at most two short paragraphs.\n\
-  3. Reply on-topic to the conversation happening in the chat\n\
-  3. Respond ONLY in-character with dialogue and NO other text.\n\
+  3. Your voice should be immediately recognizable as belonging to \
+     your character.\n\
+  4. Reply on-topic to the conversation happening in the chat\n\
+  5. Respond ONLY in-character with dialogue and NO other text.\n\
 ";
 
 pub const OPENAI_MODEL: &str = "gpt-4o-mini";

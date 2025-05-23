@@ -33,4 +33,8 @@ impl<T> CapacityDeque<T> {
   pub fn iter(&self) -> impl Iterator<Item = &T> {
     self.inner.iter()
   }
+
+  pub fn clear(&mut self) {
+    self.inner.clear();
+  }
 }
