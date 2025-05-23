@@ -1,7 +1,7 @@
 
 //! Personality template.
 
-use super::base::BasePersonality;
+use super::character::BaseCharacter;
 use super::tag::PersonalityTag;
 use crate::openai::OPENAI_MODEL;
 
@@ -32,29 +32,30 @@ pub const BASE_DEVELOPER_PROMPT: &str = "\
 pub struct FullPersonality {
   pub name: String,
   pub class: String,
+  pub base_character: String,
   pub synopsis: String,
 }
 
 #[derive(Debug, Clone)]
 pub struct PersonalityTemplate {
-  pub base_personality: BasePersonality,
+  pub base_character: BaseCharacter,
   pub tags: Vec<PersonalityTag>,
 }
 
 impl FullPersonality {
   pub fn tagline(&self) -> String {
-    format!("{} (\"Marco\" for short) - [Class: {}] {}", self.name, self.class, self.synopsis)
+    format!("{} (\"Marco\" for short) - {}, like {} (Quirks: {})", self.name, self.class, self.base_character, self.synopsis)
   }
 }
 
 impl PersonalityTemplate {
   fn get_user_prompt(&self) -> String {
-    let base_personality = self.base_personality.long_name();
+    let base_personality = self.base_character.to_string();
     let tags = self.tags.iter()
       .map(|t| t.to_string())
       .join(", ");
     format!("\
-      Base Personality: {base_personality}\n\
+      Base Character: {base_personality}\n\
       Tags: {tags}\n\
       \n\
       Output Format:\n\
@@ -69,7 +70,7 @@ impl PersonalityTemplate {
 
 impl Display for PersonalityTemplate {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    write!(f, "{} ({})", self.base_personality.long_name(), self.tags.iter().join(", "))
+    write!(f, "{} ({})", self.base_character.to_string(), self.tags.iter().join(", "))
   }
 }
 
@@ -77,6 +78,7 @@ impl Default for FullPersonality {
   fn default() -> Self {
     Self {
       name: String::from("Marco"),
+      base_character: String::from("ChatGPT"),
       class: String::from("AI"),
       synopsis: String::from("A helpful AI assistant"),
     }
@@ -105,6 +107,7 @@ pub async fn flesh_out_personality(
   let synopsis = SYNOPSIS_RE.captures(&text).and_then(|c| c.get(1))
     .ok_or_else(|| anyhow::anyhow!("Failed to parse synopsis from response"))?
     .as_str().into();
-  let class = template.base_personality.long_name().to_owned();
-  Ok(FullPersonality { name, class, synopsis })
+  let class = template.base_character.class().long_name().to_owned();
+  let base_character = template.base_character.to_string();
+  Ok(FullPersonality { name, base_character, class, synopsis })
 }
