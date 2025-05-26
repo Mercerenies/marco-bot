@@ -60,7 +60,7 @@ pub fn relevance_completion(
     Latest chat message: `{latest_chat_message}`\n\
     \n\
     Does the above chat message directly refer to your \
-    character or warrant a response from him/her?\
+    character or request a response from him/her?\
   ");
   let request = CreateChatCompletionRequestArgs::default()
     .model(OPENAI_MODEL)
