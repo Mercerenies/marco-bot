@@ -4,7 +4,7 @@ use super::BotCommand;
 use crate::personality::generate_personality;
 
 use serenity::prelude::*;
-use serenity::model::channel::Message;
+use serenity::model::application::CommandInteraction;
 use serenity::builder::CreateMessage;
 use async_trait::async_trait;
 
@@ -20,7 +20,14 @@ impl BotCommand for RerollCommand {
     "reroll"
   }
 
-  async fn run_command(&self, bot: &MarcoBot, ctx: &Context, message: &Message) -> anyhow::Result<()> {
+  fn get_command_desc(&self) -> &str {
+    "Rerolls a new personality for Marco immediately."
+  }
+
+  async fn run_command(&self, bot: &MarcoBot, ctx: &Context, interaction: CommandInteraction) -> anyhow::Result<()> {
+    todo!()
+  }
+/*
     let new_personality = generate_personality(bot.client()).await?;
     let name = new_personality.name.trim().to_owned();
     {
@@ -34,4 +41,5 @@ impl BotCommand for RerollCommand {
     message.channel_id.send_message(&ctx.http, resp).await?;
     Ok(())
   }
+*/
 }

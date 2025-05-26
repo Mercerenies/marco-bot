@@ -3,8 +3,9 @@ use crate::bot::MarcoBot;
 use super::BotCommand;
 
 use serenity::prelude::*;
-use serenity::model::channel::Message;
-use serenity::builder::{CreateEmbed, CreateEmbedFooter, CreateMessage};
+use serenity::model::application::CommandInteraction;
+use serenity::builder::{CreateEmbed, CreateEmbedFooter,
+                        CreateInteractionResponse, CreateInteractionResponseMessage};
 use async_trait::async_trait;
 
 use std::fmt::Debug;
@@ -19,7 +20,11 @@ impl BotCommand for HelpCommand {
     "help"
   }
 
-  async fn run_command(&self, _bot: &MarcoBot, ctx: &Context, message: &Message) -> anyhow::Result<()> {
+  fn get_command_desc(&self) -> &str {
+    "Displays help message."
+  }
+
+  async fn run_command(&self, _bot: &MarcoBot, ctx: &Context, interaction: CommandInteraction) -> anyhow::Result<()> {
     let help_embed = CreateEmbed::default()
       .title("Marco Bot Help")
       .description("Marco is a Discord bot written by Mercerenies. Check the link above for more details")
@@ -28,10 +33,10 @@ impl BotCommand for HelpCommand {
       .url("https://github.com/Mercerenies/marco-bot")
       .footer(CreateEmbedFooter::new("Thank you for using Marco Bot!"));
 
-    let response_message = CreateMessage::default()
+    let response_message = CreateInteractionResponseMessage::default()
       .embed(help_embed);
 
-    message.channel_id.send_message(&ctx.http, response_message).await?;
+    interaction.create_response(&ctx.http, CreateInteractionResponse::Message(response_message)).await?;
     Ok(())
   }
 }

@@ -16,12 +16,14 @@ use serenity::model::gateway::Ready;
 use serenity::model::id::{UserId, GuildId, ChannelId, MessageId};
 use serenity::model::channel::{Channel, ReactionType};
 use serenity::model::user::User;
-use serenity::builder::CreateMessage;
+use serenity::model::application::{Command, Interaction, CommandInteraction};
+use serenity::builder::{CreateMessage, CreateCommand, CreateInteractionResponse, CreateInteractionResponseMessage};
 use serenity::gateway::ActivityData;
 use async_trait::async_trait;
 
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::collections::HashMap;
+use std::env;
 
 /// An instance of this Discord bot.
 ///
@@ -104,6 +106,30 @@ impl MarcoBot {
       }
     }
   }
+
+  async fn register_commands(&self, ctx: &Context) {
+    let commands: Vec<_> = self.inner.commands.values()
+      .map(|cmd| CreateCommand::new(cmd.get_command_name()).description(cmd.get_command_desc()))
+      .collect();
+    if cfg!(debug_assertions) {
+      // Use guild commands for debug purposes.
+      let guild_id = GuildId::new(
+        env::var("DISCORD_DEBUG_GUILD_ID").ok()
+          .and_then(|id| id.parse().ok())
+          .expect("DISCORD_DEBUG_GUILD_ID must be set to a valid u64"),
+      );
+      let Ok(guild) = ctx.http.get_guild(guild_id).await else {
+        panic!("Guild ID {} not found", guild_id);
+      };
+      let Ok(_) = guild.set_commands(&ctx.http, commands).await else {
+        panic!("Failed to register commands for guild {}", guild_id);
+      };
+    } else {
+      let Ok(_) = Command::set_global_commands(&ctx.http, commands).await else {
+        panic!("Failed to register global commands");
+      };
+    }
+  }
 }
 
 impl MarcoBotState {
@@ -158,17 +184,6 @@ impl EventHandler for MarcoBot {
     if msg.author.id == bot_user_id {
       // Ignore all messages from the bot itself
       return;
-    }
-
-    // Special command checks
-    if !msg.author.bot {
-      if let Some(command) = self.inner.commands.get(&msg.content) {
-        let res = command.run_command(self, &ctx, &msg).await;
-        if let Err(err) = res {
-          println!("Error while running {:?} command: {:?}", command, err);
-        }
-        return;
-      }
     }
 
     if is_dm(&ctx, &msg).await {
@@ -246,12 +261,30 @@ impl EventHandler for MarcoBot {
     }
   }
 
+  async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
+    let Interaction::Command(interaction) = interaction else {
+      eprintln!("Got unknown interaction {:?}... ignoring", interaction);
+      return;
+    };
+    let Some(relevant_command) = self.inner.commands.get(&interaction.data.name) else {
+      eprintln!("Got unknown command {:?}... ignoring", interaction);
+      if let Err(why) = send_invalid_command_response(&ctx, interaction).await {
+        println!("Error sending invalid command response: {:?}", why);
+      }
+      return;
+    };
+    if let Err(why) = relevant_command.run_command(self, &ctx, interaction).await {
+      println!("Error in command {:?}: {}", relevant_command, why);
+    }
+  }
+
   async fn ready(&self, ctx: Context, ready: Ready) {
     println!("{} is connected!", ready.user.name);
     {
       let state = self.lock_state();
       state.refresh_activity(&ctx);
     }
+    self.register_commands(&ctx).await;
     passive::schedule_reroll_task(self.clone(), ctx);
   }
 }
@@ -302,4 +335,10 @@ async fn do_reaction_flow(
   if let Err(err) = do_reaction_flow_impl(bot, ctx, message_content, channel_id, message_id).await {
     println!("Error while doing reaction flow: {:?}", err);
   }
+}
+
+async fn send_invalid_command_response(ctx: &Context, interaction: CommandInteraction) -> serenity::Result<()> {
+  interaction.create_response(&ctx.http, CreateInteractionResponse::Message(
+    CreateInteractionResponseMessage::new().content("I don't understand that command."))
+  ).await
 }

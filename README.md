@@ -12,6 +12,14 @@ a Discord ping, a Discord reply, or with the text "Marco"). But he
 listens (for trigger words) on all messages, even if he doesn't reply
 to them.
 
+This bot expects a few environment variables to exist:
+* `DISCORD_TOKEN` shall be the bot's Discord token.
+* `OPENAI_API_KEY` shall be the OpenAI API key.
+* `DISCORD_DEBUG_GUILD_ID` shall be the guild ID of the server being
+  used for debugging. This is **ONLY** relevant when running in debug
+  mode (hence, using a single usually-private server for debugging).
+  In release mode, this variable is ignored.
+
 This bot is available under the [MIT License](LICENSE.txt).
 
 ## Marco's Friends
