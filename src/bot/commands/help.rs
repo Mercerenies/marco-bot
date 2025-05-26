@@ -28,8 +28,8 @@ impl BotCommand for HelpCommand {
     let help_embed = CreateEmbed::default()
       .title("Marco Bot Help")
       .description("Marco is a Discord bot written by Mercerenies. Check the link above for more details")
-      .field("!marco help", "Displays this help message.", false)
-      .field("!marco reroll", "Roll a new personality for Marco.", false)
+      .field("/help", "Displays this help message.", false)
+      .field("/reroll", "Roll a new personality for Marco.", false)
       .url("https://github.com/Mercerenies/marco-bot")
       .footer(CreateEmbedFooter::new("Thank you for using Marco Bot!"));
 

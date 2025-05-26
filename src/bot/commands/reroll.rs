@@ -5,7 +5,8 @@ use crate::personality::generate_personality;
 
 use serenity::prelude::*;
 use serenity::model::application::CommandInteraction;
-use serenity::builder::CreateMessage;
+use serenity::builder::{CreateInteractionResponse, CreateInteractionResponseMessage,
+                        EditInteractionResponse};
 use async_trait::async_trait;
 
 use std::fmt::Debug;
@@ -25,9 +26,10 @@ impl BotCommand for RerollCommand {
   }
 
   async fn run_command(&self, bot: &MarcoBot, ctx: &Context, interaction: CommandInteraction) -> anyhow::Result<()> {
-    todo!()
-  }
-/*
+    let initial_response = CreateInteractionResponseMessage::default()
+      .content("Rerolling...");
+    interaction.create_response(&ctx.http, CreateInteractionResponse::Defer(initial_response)).await?;
+
     let new_personality = generate_personality(bot.client()).await?;
     let name = new_personality.name.trim().to_owned();
     {
@@ -35,11 +37,11 @@ impl BotCommand for RerollCommand {
       state.set_personality(new_personality);
       state.refresh_activity(&ctx);
     }
-    let resp = CreateMessage::default()
-      .content(format!("Introducing {name}!"))
-      .reference_message(message);
-    message.channel_id.send_message(&ctx.http, resp).await?;
+
+    let final_response = EditInteractionResponse::default()
+      .content(format!("Introducing {name}!"));
+    interaction.edit_response(&ctx.http, final_response).await?;
+
     Ok(())
   }
-*/
 }
