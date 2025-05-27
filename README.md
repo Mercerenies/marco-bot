@@ -19,3 +19,4 @@ This bot is available under the [MIT License](LICENSE.txt).
 * [RolyBot](https://github.com/jbax1899/RolyBot/)
 * [flukebot](https://github.com/EvanSkiStudios/flukebot)
 * [Shawbot](https://github.com/Circaurus/Shawbot)
+* [Beelzebot](https://github.com/Lukanibal/Beelzebot/)
