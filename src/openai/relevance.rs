@@ -60,8 +60,8 @@ pub fn relevance_completion(
     Your character: {personality_name} (\"Marco\" for short)\n\
     Latest chat message: `{latest_chat_message}`\n\
     \n\
-    Does the above chat message directly refer to your \
-    character or warrant a response from him/her?\
+    Is the above message directly speaking to your \
+    character?
   ");
   let request = CreateChatCompletionRequestArgs::default()
     .model(OPENAI_MODEL)
