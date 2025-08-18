@@ -36,6 +36,7 @@ impl OpenAiRelevanceChecker {
       .create(self.completion_request)
       .await?;
     let text = response.choices.first().unwrap().message.content.to_owned().unwrap();
+    println!("Relevance response: {text}");
     if text.to_lowercase().contains("yes") {
       Ok(true)
     } else if text.to_lowercase().contains("no") {

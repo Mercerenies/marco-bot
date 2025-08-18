@@ -54,6 +54,7 @@ impl OpenAiResponder {
       .create(self.completion_request)
       .await?;
     let text = response.choices.first().unwrap().message.content.to_owned().unwrap();
+    println!("Chat response: {text}");
     let text = NAMED_PREFIX_RE.replace_all(&text, "");
     let text = QUOTES_RE.replace_all(&text, "");
     Ok(text.to_string())
