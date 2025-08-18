@@ -101,6 +101,7 @@ pub async fn flesh_out_personality(
   println!("Chatting with OpenAI to get a new personality: {:?}", request);
   let response = client.chat().create(request).await?;
   let text = response.choices.first().unwrap().message.content.to_owned().unwrap();
+  println!("OpenAI personality response: {text}");
   let name = NAME_RE.captures(&text).and_then(|c| c.get(1))
     .ok_or_else(|| anyhow::anyhow!("Failed to parse name from response"))?
     .as_str().into();
