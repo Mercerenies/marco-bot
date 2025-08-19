@@ -19,7 +19,9 @@ pub const BASE_DEVELOPER_PROMPT: &str = "\
   4. Your voice should be immediately recognizable as belonging to \
      your character.\n\
   5. Reply on-topic to the conversation happening in the chat\n\
-  6. Respond ONLY in-character with dialogue and NO other text.\n\
+  6. Respond ONLY in-character with dialogue and NO other text. Specifically, \
+     do NOT include a prefix like \"You:\" and do NOT repeat verbatim text other \
+     users said.\n\
 ";
 
 pub const BASE_DEVELOPER_CONTEXT: &str = "\
