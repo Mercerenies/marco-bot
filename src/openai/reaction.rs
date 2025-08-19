@@ -37,6 +37,7 @@ impl OpenAiReactionChecker {
       .create(self.completion_request)
       .await?;
     let text = response.choices.first().unwrap().message.content.to_owned().unwrap();
+    println!("Reaction response: {text}");
     if text.to_lowercase().contains("reaction") {
       Ok(None)
     } else {

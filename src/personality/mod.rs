@@ -15,9 +15,16 @@ use async_openai::Client;
 use async_openai::config::OpenAIConfig;
 
 pub async fn generate_personality(client: &Client<OpenAIConfig>) -> anyhow::Result<FullPersonality> {
+  let base_character = *BaseCharacter::VARIANTS.choose(&mut rng()).unwrap();
+  generate_personality_from(client, base_character).await
+}
+
+pub async fn generate_personality_from(
+  client: &Client<OpenAIConfig>,
+  base_character: BaseCharacter,
+) -> anyhow::Result<FullPersonality> {
   let template = {
     let mut random = rng();
-    let base_character = *BaseCharacter::VARIANTS.choose(&mut random).unwrap();
     let tags_count = [(1, 0.6), (2, 0.4)].choose_weighted(&mut random, |w| w.1).unwrap().0;
     let tags = PersonalityTag::VARIANTS.choose_multiple(&mut random, tags_count).copied().collect();
     PersonalityTemplate { base_character, tags }

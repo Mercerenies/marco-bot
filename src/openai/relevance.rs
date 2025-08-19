@@ -36,6 +36,7 @@ impl OpenAiRelevanceChecker {
       .create(self.completion_request)
       .await?;
     let text = response.choices.first().unwrap().message.content.to_owned().unwrap();
+    println!("Relevance response: {text}");
     if text.to_lowercase().contains("yes") {
       Ok(true)
     } else if text.to_lowercase().contains("no") {
@@ -59,8 +60,8 @@ pub fn relevance_completion(
     Your character: {personality_name} (\"Marco\" for short)\n\
     Latest chat message: `{latest_chat_message}`\n\
     \n\
-    Does the above chat message directly refer to your \
-    character or request a response from him/her?\
+    Is the above message directly speaking to your \
+    character?
   ");
   let request = CreateChatCompletionRequestArgs::default()
     .model(OPENAI_MODEL)
