@@ -24,7 +24,8 @@ This bot is available under the [MIT License](LICENSE.txt).
 
 ## Marco's Friends
 
-* [RolyBot](https://github.com/jbax1899/RolyBot/)
-* [flukebot](https://github.com/EvanSkiStudios/flukebot)
-* [Shawbot](https://github.com/Circaurus/Shawbot)
 * [Beelzebot](https://github.com/Lukanibal/Beelzebot/)
+* [Daneel](https://github.com/jbax1899/Daneel)
+* [flukebot](https://github.com/EvanSkiStudios/flukebot)
+* [RolyBot](https://github.com/jbax1899/RolyBot/)
+* [Shawbot](https://github.com/Circaurus/Shawbot)
