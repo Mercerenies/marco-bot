@@ -9,12 +9,18 @@ use async_openai::types::{CreateChatCompletionRequest, CreateChatCompletionReque
                           ChatCompletionRequestMessage};
 use async_openai::config::OpenAIConfig;
 use async_openai::error::OpenAIError;
+use regex::Regex;
+
+use std::sync::LazyLock;
 
 const DEVELOPER_PROMPT: &str = "\
   You are Marco, a discord bot. You are roleplaying in a Discord server. \
   The user will feed you a chat message and ask you a question. Answer with \
   a simple \"Yes\" or \"No\" and no other output.\
 ";
+
+/// Regex to strip direct mentions.
+const MENTION_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"<@\d+>\s+").unwrap());
 
 /// Structure holding the parameters for an OpenAI question as to
 /// whether or not the bot should respond.
@@ -56,12 +62,15 @@ pub fn relevance_completion(
 ) -> OpenAiRelevanceChecker {
   let personality_name = &personality.name;
   let latest_chat_message = latest_chat_message.replace('\n', " ");
+  let latest_chat_message = MENTION_RE.replace_all(&latest_chat_message, "");
   let user_prompt = format!("\
     Your character: {personality_name} (\"Marco\" for short)\n\
     Latest chat message: `{latest_chat_message}`\n\
     \n\
-    Is the above message directly speaking to your \
-    character?
+    Does the above message directly address your character \
+    (\"{personality_name}\" or \"Marco\") by name? Do NOT \
+    respond YES if the message is a passive or generic comment that does \
+    not mention your name.
   ");
   let request = CreateChatCompletionRequestArgs::default()
     .model(OPENAI_MODEL)
