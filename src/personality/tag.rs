@@ -62,4 +62,5 @@ pub enum PersonalityTag {
   PathologicalLiar,
   LovesPuns,
   BadGambler,
+  ManiacalLaughter,
 }
