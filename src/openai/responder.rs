@@ -1,7 +1,7 @@
 
 use crate::bot::message::{Message, MessageUser};
 use crate::personality::FullPersonality;
-use super::{DeveloperPromptConfig, BASE_DEVELOPER_PROMPT, OPENAI_MODEL};
+use super::{DeveloperPromptConfig, BASE_DEVELOPER_PROMPT, BASE_DEVELOPER_CONTEXT, OPENAI_MODEL};
 
 use async_openai::Client;
 use async_openai::types::{CreateChatCompletionRequest, CreateChatCompletionRequestArgs,
@@ -97,6 +97,7 @@ where I1: IntoIterator<Item = &'a Message>,
     .n(1)
     .messages(vec![
       ChatCompletionRequestMessage::Developer(get_developer_prompt(config).into()),
+      ChatCompletionRequestMessage::Developer(BASE_DEVELOPER_CONTEXT.into()),
       ChatCompletionRequestMessage::User(user_prompt.into()),
     ])
     .build()
