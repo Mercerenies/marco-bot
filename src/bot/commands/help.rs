@@ -1,6 +1,6 @@
 
 use crate::bot::MarcoBot;
-use super::BotCommand;
+use super::{BotCommand, CommandOption};
 
 use serenity::prelude::*;
 use serenity::model::application::CommandInteraction;
@@ -24,12 +24,16 @@ impl BotCommand for HelpCommand {
     "Displays help message."
   }
 
+  fn get_command_arguments(&self) -> Vec<CommandOption> {
+    Vec::new()
+  }
+
   async fn run_command(&self, _bot: &MarcoBot, ctx: &Context, interaction: CommandInteraction) -> anyhow::Result<()> {
     let help_embed = CreateEmbed::default()
       .title("Marco Bot Help")
       .description("Marco is a Discord bot written by Mercerenies. Check the link above for more details")
       .field("/help", "Displays this help message.", false)
-      .field("/reroll", "Roll a new personality for Marco.", false)
+      .field("/reroll [base]", "Roll a new personality for Marco.", false)
       .url("https://github.com/Mercerenies/marco-bot")
       .footer(CreateEmbedFooter::new("Thank you for using Marco Bot!"));
 

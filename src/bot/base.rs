@@ -17,7 +17,8 @@ use serenity::model::id::{UserId, GuildId, ChannelId, MessageId};
 use serenity::model::channel::{Channel, ReactionType};
 use serenity::model::user::User;
 use serenity::model::application::{Command, Interaction, CommandInteraction};
-use serenity::builder::{CreateMessage, CreateCommand, CreateInteractionResponse, CreateInteractionResponseMessage};
+use serenity::builder::{CreateMessage, CreateCommand, CreateCommandOption,
+                        CreateInteractionResponse, CreateInteractionResponseMessage};
 use serenity::gateway::ActivityData;
 use async_trait::async_trait;
 
@@ -108,8 +109,18 @@ impl MarcoBot {
   }
 
   async fn register_commands(&self, ctx: &Context) {
+    fn compile_command(command: &dyn BotCommand) -> CreateCommand {
+      let args = command.get_command_arguments()
+        .into_iter()
+        .map(CreateCommandOption::from)
+        .collect();
+      CreateCommand::new(command.get_command_name())
+        .description(command.get_command_desc())
+        .set_options(args)
+    }
+
     let commands: Vec<_> = self.inner.commands.values()
-      .map(|cmd| CreateCommand::new(cmd.get_command_name()).description(cmd.get_command_desc()))
+      .map(|cmd| compile_command(cmd.as_ref()))
       .collect();
     if cfg!(debug_assertions) {
       // Use guild commands for debug purposes.
