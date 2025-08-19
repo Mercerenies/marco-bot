@@ -122,24 +122,24 @@ impl MarcoBot {
     let commands: Vec<_> = self.inner.commands.values()
       .map(|cmd| compile_command(cmd.as_ref()))
       .collect();
-    if cfg!(debug_assertions) {
-      // Use guild commands for debug purposes.
-      let guild_id = GuildId::new(
-        env::var("DISCORD_DEBUG_GUILD_ID").ok()
-          .and_then(|id| id.parse().ok())
-          .expect("DISCORD_DEBUG_GUILD_ID must be set to a valid u64"),
-      );
-      let Ok(guild) = ctx.http.get_guild(guild_id).await else {
-        panic!("Guild ID {} not found", guild_id);
-      };
-      let Ok(_) = guild.set_commands(&ctx.http, commands).await else {
-        panic!("Failed to register commands for guild {}", guild_id);
-      };
-    } else {
-      let Ok(_) = Command::set_global_commands(&ctx.http, commands).await else {
-        panic!("Failed to register global commands");
-      };
-    }
+    //if cfg!(debug_assertions) {
+    // Use guild commands for debug purposes.
+    let guild_id = GuildId::new(
+      env::var("DISCORD_DEBUG_GUILD_ID").ok()
+        .and_then(|id| id.parse().ok())
+        .expect("DISCORD_DEBUG_GUILD_ID must be set to a valid u64"),
+    );
+    let Ok(guild) = ctx.http.get_guild(guild_id).await else {
+      panic!("Guild ID {} not found", guild_id);
+    };
+    let Ok(_) = guild.set_commands(&ctx.http, commands).await else {
+      panic!("Failed to register commands for guild {}", guild_id);
+    };
+    //} else {
+    //  let Ok(_) = Command::set_global_commands(&ctx.http, commands).await else {
+    //    panic!("Failed to register global commands");
+    //  };
+    //}
   }
 }
 
