@@ -18,10 +18,8 @@ pub const BASE_DEVELOPER_PROMPT: &str = "\
      at most two short paragraphs.\n\
   4. Your voice should be immediately recognizable as belonging to \
      your character.\n\
-  5. Avoid unnecessarily flowery language, unless it suits your \
-     character. Remain direct and to-the-point.\n\
-  6. Reply on-topic to the conversation happening in the chat\n\
-  7. Respond ONLY in-character with dialogue and NO other text.\n\
+  5. Reply on-topic to the conversation happening in the chat\n\
+  6. Respond ONLY in-character with dialogue and NO other text.\n\
 ";
 
 pub const BASE_DEVELOPER_CONTEXT: &str = "\
