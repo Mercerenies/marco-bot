@@ -31,6 +31,8 @@ pub enum BaseCharacter {
   Dobby,
   #[strum(serialize = "Metro-Man (from Megamind)")]
   MetroMan,
+  #[strum(serialize = "Superman")]
+  Superman,
   #[strum(serialize = "Alfred (from Batman)")]
   Alfred,
   #[strum(serialize = "Doc Brown")]
@@ -39,6 +41,12 @@ pub enum BaseCharacter {
   ObiWanKenobi,
   #[strum(serialize = "Yoda")]
   Yoda,
+  #[strum(serialize = "Fred Flintstone")]
+  FredFlintstone,
+  #[strum(serialize = "The Joker")]
+  TheJoker,
+  #[strum(serialize = "James Bond")]
+  JamesBond,
 }
 
 impl BaseCharacter {
@@ -56,10 +64,14 @@ impl BaseCharacter {
       BaseCharacter::Gollum => BasePersonality::Goblin,
       BaseCharacter::Dobby => BasePersonality::Elf,
       BaseCharacter::MetroMan => BasePersonality::Superhero,
+      BaseCharacter::Superman => BasePersonality::Superhero,
       BaseCharacter::Alfred => BasePersonality::Butler,
       BaseCharacter::DocBrown => BasePersonality::Professor,
       BaseCharacter::ObiWanKenobi => BasePersonality::JediMaster,
       BaseCharacter::Yoda => BasePersonality::JediMaster,
+      BaseCharacter::FredFlintstone => BasePersonality::Caveman,
+      BaseCharacter::TheJoker => BasePersonality::Clown,
+      BaseCharacter::JamesBond => BasePersonality::SecretAgent,
     }
   }
 }

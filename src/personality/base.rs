@@ -25,6 +25,9 @@ pub enum BasePersonality {
   Butler,
   Professor,
   JediMaster,
+  Caveman,
+  Clown,
+  SecretAgent,
 }
 
 impl BasePersonality {
@@ -50,6 +53,9 @@ impl BasePersonality {
       BasePersonality::Butler => "Traditional British Butler",
       BasePersonality::Professor => "College Professor",
       BasePersonality::JediMaster => "Jedi Master",
+      BasePersonality::Caveman => "Caveman",
+      BasePersonality::Clown => "Clown",
+      BasePersonality::SecretAgent => "Secret Agent",
     }
   }
 
@@ -75,6 +81,9 @@ impl BasePersonality {
       BasePersonality::Butler => "Butler Marco",
       BasePersonality::Professor => "Professor Marco",
       BasePersonality::JediMaster => "Jedi Marco",
+      BasePersonality::Caveman => "Caveman Marco",
+      BasePersonality::Clown => "Clown Marco",
+      BasePersonality::SecretAgent => "Agent Marco",
     }
   }
 }
