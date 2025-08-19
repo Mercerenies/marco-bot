@@ -44,7 +44,7 @@ pub struct PersonalityTemplate {
 
 impl FullPersonality {
   pub fn tagline(&self) -> String {
-    format!("{} (\"Marco\" for short) - {}, like {} (Quirks: {})", self.name, self.class, self.base_character, self.synopsis)
+    format!("{} (\"Marco\" for short) - {}, talks and behaves like {} (Quirks: {})", self.name, self.class, self.base_character, self.synopsis)
   }
 }
 
@@ -61,8 +61,8 @@ impl PersonalityTemplate {
       Output Format:\n\
       ```\n\
       Name: (name)\n\
-      Description: (Short, one-sentence)\n\
-      Summary: (At most six words)\n\
+      Description: (Short, a few sentences)\n\
+      Summary: (At most one short sentence)\n\
       ```\
     ")
   }
@@ -107,7 +107,7 @@ pub async fn flesh_out_personality(
     .as_str().into();
   let synopsis = SYNOPSIS_RE.captures(&text).and_then(|c| c.get(1))
     .ok_or_else(|| anyhow::anyhow!("Failed to parse synopsis from response"))?
-    .as_str().into();
+    .as_str().trim().to_owned();
   let class = template.base_character.class().long_name().to_owned();
   let base_character = template.base_character.to_string();
   Ok(FullPersonality { name, base_character, class, synopsis })
