@@ -1,6 +1,6 @@
 
 use super::MarcoBot;
-use crate::personality::generate_personality;
+use crate::personality::{generate_personality, generate_personality_from};
 
 use serenity::prelude::*;
 use serenity::model::channel::Message;
@@ -27,7 +27,11 @@ pub struct RerollCommand;
 pub trait BotCommand: Debug + Send + Sync {
   fn get_command_name(&self) -> &str;
 
-  async fn run_command(&self, bot: &MarcoBot, ctx: &Context, message: &Message) -> anyhow::Result<()>;
+  async fn run_command(&self,
+                       bot: &MarcoBot,
+                       ctx: &Context,
+                       message: &Message,
+                       params: &[&str]) -> anyhow::Result<()>;
 
   fn get_command_text(&self) -> String {
     format!("!marco {}", self.get_command_name())
@@ -40,12 +44,12 @@ impl BotCommand for HelpCommand {
     "help"
   }
 
-  async fn run_command(&self, _bot: &MarcoBot, ctx: &Context, message: &Message) -> anyhow::Result<()> {
+  async fn run_command(&self, _bot: &MarcoBot, ctx: &Context, message: &Message, _params: &[&str]) -> anyhow::Result<()> {
     let help_embed = CreateEmbed::default()
       .title("Marco Bot Help")
       .description("Marco is a Discord bot written by Mercerenies. Check the link above for more details")
       .field("!marco help", "Displays this help message.", false)
-      .field("!marco reroll", "Roll a new personality for Marco.", false)
+      .field("!marco reroll [base]", "Roll a new personality for Marco.", false)
       .url("https://github.com/Mercerenies/marco-bot")
       .footer(CreateEmbedFooter::new("Thank you for using Marco Bot!"));
 
@@ -63,8 +67,21 @@ impl BotCommand for RerollCommand {
     "reroll"
   }
 
-  async fn run_command(&self, bot: &MarcoBot, ctx: &Context, message: &Message) -> anyhow::Result<()> {
-    let new_personality = generate_personality(bot.client()).await?;
+  async fn run_command(&self, bot: &MarcoBot, ctx: &Context, message: &Message, params: &[&str]) -> anyhow::Result<()> {
+    let new_personality;
+    if !params.is_empty() {
+      let base_character = params[0].to_lowercase().parse();
+      let Ok(base_char) = base_character else {
+        let resp = CreateMessage::default()
+          .content("I don't know who that is.")
+          .reference_message(message);
+        message.channel_id.send_message(&ctx.http, resp).await?;
+        return Ok(())
+      };
+      new_personality = generate_personality_from(bot.client(), base_char).await?;
+    } else {
+      new_personality = generate_personality(bot.client()).await?;
+    }
     let name = new_personality.name.trim().to_owned();
     {
       let mut state = bot.lock_state();
@@ -82,7 +99,7 @@ impl BotCommand for RerollCommand {
 pub fn compile_commands_map<I>(commands: I) -> HashMap<String, Box<dyn BotCommand>>
 where I: IntoIterator<Item = Box<dyn BotCommand>> {
   commands.into_iter()
-    .map(|c| (c.get_command_text(), c))
+    .map(|c| (c.get_command_name().to_owned(), c))
     .collect()
 }
 

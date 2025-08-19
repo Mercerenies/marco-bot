@@ -162,12 +162,17 @@ impl EventHandler for MarcoBot {
 
     // Special command checks
     if !msg.author.bot {
-      if let Some(command) = self.inner.commands.get(&msg.content) {
-        let res = command.run_command(self, &ctx, &msg).await;
-        if let Err(err) = res {
-          println!("Error while running {:?} command: {:?}", command, err);
+      let tokenized = msg.content.split_whitespace().collect::<Vec<_>>();
+      if tokenized.get(0) == Some(&"!marco") {
+        if let Some(command_name) = tokenized.get(1) {
+          if let Some(command) = self.inner.commands.get(*command_name) {
+            let res = command.run_command(self, &ctx, &msg, &tokenized[2..]).await;
+            if let Err(err) = res {
+              println!("Error while running {:?} command: {:?}", command, err);
+            }
+            return;
+          }
         }
-        return;
       }
     }
 
