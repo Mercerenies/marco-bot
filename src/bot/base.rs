@@ -54,7 +54,7 @@ pub struct MarcoBotState {
   /// Incremented each time Marco generates a new personality.
   pub personality_id: usize,
   pub personality: FullPersonality,
-  pub messages: MessageHistory,
+  pub messages: HashMap<ChannelId, MessageHistory>,
   pub last_reference: Option<chrono::DateTime<chrono::Utc>>,
 }
 
@@ -149,11 +149,15 @@ impl MarcoBotState {
 
   pub fn new() -> Self {
     Self {
-      messages: MessageHistory::new(Self::MESSAGE_REFER_HISTORY_CAPACITY, Self::MESSAGE_HISTORY_CAPACITY),
+      messages: HashMap::new(),
       personality_id: 0,
       personality: FullPersonality::default(),
       last_reference: None,
     }
+  }
+
+  fn make_new_message_history() -> MessageHistory {
+    MessageHistory::new(Self::MESSAGE_REFER_HISTORY_CAPACITY, Self::MESSAGE_HISTORY_CAPACITY)
   }
 
   pub fn refresh_activity(&self, ctx: &Context) {
@@ -166,7 +170,9 @@ impl MarcoBotState {
     self.last_reference = None;
     self.personality_id = self.personality_id.wrapping_add(1);
     self.personality = personality;
-    self.messages.referred_messages_mut().clear();
+    for message_history in self.messages.values_mut() {
+      message_history.referred_messages_mut().clear();
+    }
   }
 
   pub fn mark_latest_reference(&mut self, date: chrono::DateTime<chrono::Utc>) {
@@ -224,16 +230,20 @@ impl EventHandler for MarcoBot {
         },
         content: msg.content.to_owned(),
       };
-      state.messages.push_back(message, relevant);
+      let message_history = state.messages.entry(msg.channel_id)
+        .or_insert_with(MarcoBotState::make_new_message_history);
+      message_history.push_back(message, relevant);
       if relevant {
         let config = DeveloperPromptConfig {};
         state.mark_latest_reference(chrono::Utc::now());
+        // Re-borrow as immutable.
+        let message_history = state.messages.get(&msg.channel_id).unwrap();
         responder = Some(
           chat_completion(
             state.personality_id,
             &state.personality,
-            state.messages.messages().iter(),
-            state.messages.referred_messages().iter(),
+            message_history.messages().iter(),
+            message_history.referred_messages().iter(),
             &config,
           ).with_typing_notification(&ctx, msg.channel_id),
         );
@@ -254,7 +264,9 @@ impl EventHandler for MarcoBot {
           identity_id: state.personality_id,
           identity: state.personality.name.clone(),
         };
-        state.messages.push_back(message::Message {
+        let messages = state.messages.entry(msg.channel_id)
+          .or_insert_with(MarcoBotState::make_new_message_history);
+        messages.push_back(message::Message {
           user,
           content: resp.clone(),
         }, true);
