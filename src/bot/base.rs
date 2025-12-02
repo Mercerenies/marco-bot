@@ -82,7 +82,7 @@ impl MarcoBot {
   /// Locks the mutex for the bot's state and returns the guard.
   ///
   /// This method will panic if the mutex is poisoned.
-  pub fn lock_state(&self) -> MutexGuard<MarcoBotState> {
+  pub fn lock_state(&self) -> MutexGuard<'_, MarcoBotState> {
     self.inner.state.lock().unwrap()
   }
 
